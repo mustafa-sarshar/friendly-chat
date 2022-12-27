@@ -3,14 +3,11 @@ import { StatusBar } from "expo-status-bar";
 
 import "react-native-gesture-handler";
 import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
 
 // import the screens we want to navigate
 import Start from "./src/screens/start";
 import Chat from "./src/screens/chat";
-
-// Create the navigator
-const Stack = createStackNavigator();
+import Stack from "./src/components/stack";
 
 class App extends Component {
   render() {
