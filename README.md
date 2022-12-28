@@ -1,9 +1,11 @@
 # friendly-chat
 
 ## OBJECTIVES
+
 To build a chat app for mobile devices using React Native. The app will provide users with a chat interface and options to share images and their location.
 
 ## THE 5 Ws
+
 1. Who—The users of the mobile chat app. These could be friends, family or other students on this course. Your codebase will be used by other developers working on the product.
 2. What—A native chat app built with React Native, as well as all the relevant documentation.
 3. When—Whenever users of your chat app want to communicate with each other.
@@ -11,6 +13,7 @@ To build a chat app for mobile devices using React Native. The app will provide 
 5. Why—Mobile chat apps are among the most commonly downloaded and used apps in the world, so knowing how to build a chat app is an indispensable skill. The app will demonstrate your React Native development skills.
 
 ## USER STORIES
+
 - As a new user, I want to be able to easily enter a chat room so I can quickly start talking to my friends and family.
 - As a user, I want to be able to send messages to my friends and family members to exchange the latest news.
 - As a user, I want to send images to my friends to show them what I’m currently doing.
@@ -19,7 +22,15 @@ To build a chat app for mobile devices using React Native. The app will provide 
 - As a user with a visual impairment, I want to use a chat app that is compatible with a screen reader so that I can engage with a chat interface.
 
 ## KEY FEATURES
+
 - A page where users can enter their name and choose a background color for the chat screen before joining the chat.
 - A page displaying the conversation, as well as an input field and submit button.
 - The chat must provide users with two additional communication features: sending images and location data.
 - Data gets stored online and offline.
+
+## NOTES:
+
+### Icons were downloaded from:
+
+- Freepik - Flaticon:
+  - [user icons]("https://www.flaticon.com/free-icons/user")

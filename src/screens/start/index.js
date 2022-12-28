@@ -7,33 +7,49 @@ import {
   TextInput,
   Pressable,
   Alert,
+  Image,
 } from "react-native";
-import GLOBAL_STYLES from "../../assets/css";
 
+const colors = {
+  white: "#FFFFFF",
+  red: "#960905",
+  green: "#275c33",
+  blue: "#0245cc",
+  gray: "#777a80",
+};
+
+import GLOBAL_STYLES from "../../assets/css";
 const styles = StyleSheet.create({
   ...GLOBAL_STYLES,
   subContainer: {
-    marginBottom: 40,
+    width: "100%",
     alignItems: "center",
     backgroundColor: "#ffffff80",
   },
 
   subContainerColors: {
     flexDirection: "row",
-    marginBottom: 40,
     backgroundColor: "#ffffff70",
+    marginBottom: 30,
+  },
+
+  usernameWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+    borderColor: "gray",
+    borderWidth: 1,
+    borderRadius: 5,
   },
 
   txtInput: {
     height: 40,
-    borderColor: "gray",
-    borderRadius: 5,
-    borderWidth: 1,
     padding: 10,
     width: 200,
-    marginBottom: 20,
     fontWeight: "bold",
-    textAlign: "center",
+    textAlign: "left",
+    backgroundColor: "#FFFFFF",
   },
 
   lblWelcome: {
@@ -54,17 +70,20 @@ const styles = StyleSheet.create({
     margin: 5,
     elevation: 5,
   },
+  colorWhite: {
+    backgroundColor: colors.white,
+  },
   colorRed: {
-    backgroundColor: "red",
+    backgroundColor: colors.red,
   },
   colorGreen: {
-    backgroundColor: "green",
+    backgroundColor: colors.green,
   },
   colorBlue: {
-    backgroundColor: "blue",
+    backgroundColor: colors.blue,
   },
   colorGray: {
-    backgroundColor: "gray",
+    backgroundColor: colors.gray,
   },
 });
 
@@ -77,7 +96,7 @@ class Start extends Component {
 
     this.state = {
       username: "",
-      chatBgColor: { code: "#ffffff", name: "White" },
+      chatBgColor: { name: "White", code: colors.white },
     };
 
     // Bind the methods to the class
@@ -92,11 +111,9 @@ class Start extends Component {
 
   handleChatBgColorChange(color) {
     this.setState((prevState) => {
-      console.log("Prev", prevState);
       return { ...prevState, chatBgColor: { ...color } };
     });
-    Alert.alert(`Chat screen background color set to: ${color.name}`);
-    console.log("Post", this.state);
+    // Alert.alert(`Chat screen background color set to: ${color.name}`);
   }
 
   handleSubmit(evt) {
@@ -110,13 +127,17 @@ class Start extends Component {
     } else if (username.trim().length < 3) {
       Alert.alert("Username must be at least 3 characters long!!!");
     } else {
-      Alert.alert(`Logged in via username:\n${username}`);
+      // Alert.alert(`Logged in via username:\n${username}`);
       navigation.navigate("Chat", { username, chatBgColor });
     }
   }
 
   render() {
-    const { username } = this.state;
+    const { username, chatBgColor } = this.state;
+    const btnTitleColor =
+      chatBgColor.name === "White" ? "#000000" : chatBgColor.code;
+    const btnBgColor =
+      chatBgColor.name === "White" ? "#FFFFFF" : chatBgColor.code;
 
     return (
       <View style={styles.container}>
@@ -131,23 +152,38 @@ class Start extends Component {
             </Text>
             <View style={styles.subContainer}>
               <Text style={styles.lblBold}>Username</Text>
-              <TextInput
-                style={styles.txtInput}
-                value={username}
-                placeholder="enter your username please"
-                onChangeText={this.handleTextChange}
-              />
+              <View
+                style={[
+                  styles.usernameWrapper,
+                  { borderColor: `${btnTitleColor}30` },
+                ]}
+              >
+                <Image
+                  style={styles.icon}
+                  source={require("../../assets/img/user_24px.png")}
+                />
+                <TextInput
+                  style={[
+                    styles.txtInput,
+                    { backgroundColor: `${btnBgColor}20` },
+                  ]}
+                  value={username}
+                  placeholder="enter your username please"
+                  onChangeText={this.handleTextChange}
+                />
+              </View>
             </View>
             <View style={styles.subContainer}>
               <Text>Select you favorite background color</Text>
+              <Text>for chatting</Text>
               <View style={styles.subContainerColors}>
                 <Pressable
                   key="colorRed"
                   style={[styles.colorCircles, styles.colorRed]}
                   onPressOut={() =>
                     this.handleChatBgColorChange({
-                      code: "#FF0000",
                       name: "Red",
+                      code: colors.red,
                     })
                   }
                 ></Pressable>
@@ -156,8 +192,18 @@ class Start extends Component {
                   style={[styles.colorCircles, styles.colorGreen]}
                   onPressOut={() =>
                     this.handleChatBgColorChange({
-                      code: "#00FF00",
                       name: "Green",
+                      code: colors.green,
+                    })
+                  }
+                ></Pressable>
+                <Pressable
+                  key="colorWhite"
+                  style={[styles.colorCircles, styles.colorWhite]}
+                  onPressOut={() =>
+                    this.handleChatBgColorChange({
+                      name: "White",
+                      code: colors.white,
                     })
                   }
                 ></Pressable>
@@ -166,8 +212,8 @@ class Start extends Component {
                   style={[styles.colorCircles, styles.colorBlue]}
                   onPressOut={() =>
                     this.handleChatBgColorChange({
-                      code: "#0000FF",
                       name: "Blue",
+                      code: colors.blue,
                     })
                   }
                 ></Pressable>
@@ -176,16 +222,28 @@ class Start extends Component {
                   style={[styles.colorCircles, styles.colorGray]}
                   onPressOut={() =>
                     this.handleChatBgColorChange({
-                      code: "#808080",
                       name: "Gray",
+                      code: colors.gray,
                     })
                   }
                 ></Pressable>
               </View>
             </View>
-            <Pressable style={styles.btn} onPress={this.handleSubmit}>
-              <Text style={styles.lblBold}>GO TO CHAT</Text>
-            </Pressable>
+            <View
+              style={[
+                styles.btnContainer,
+                { backgroundColor: `${btnBgColor}20` },
+              ]}
+            >
+              <Pressable
+                style={[styles.btn, { borderColor: btnTitleColor }]}
+                onPress={this.handleSubmit}
+              >
+                <Text style={[styles.lblBold, { color: btnTitleColor }]}>
+                  GO TO CHAT
+                </Text>
+              </Pressable>
+            </View>
           </View>
         </ImageBackground>
       </View>

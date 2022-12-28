@@ -21,13 +21,28 @@ const GLOBAL_STYLES = StyleSheet.create({
     textAlign: "center",
   },
 
+  btnContainer: {
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+
   btn: {
+    margin: 10,
     borderRadius: 5,
     padding: 10,
     borderWidth: 1,
     outlineWidth: 0,
-    backgroundColor: "lightblue",
+    backgroundColor: "#FFFFFF",
     textAlign: "center",
+  },
+
+  icon: {
+    margin: 5,
+    paddingBottom: 30,
+    height: 24,
+    width: 24,
   },
 });
 
