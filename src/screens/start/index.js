@@ -113,7 +113,6 @@ class Start extends Component {
     this.setState((prevState) => {
       return { ...prevState, chatBgColor: { ...color } };
     });
-    // Alert.alert(`Chat screen background color set to: ${color.name}`);
   }
 
   handleSubmit(evt) {
@@ -127,7 +126,6 @@ class Start extends Component {
     } else if (username.trim().length < 3) {
       Alert.alert("Username must be at least 3 characters long!!!");
     } else {
-      // Alert.alert(`Logged in via username:\n${username}`);
       navigation.navigate("Chat", { username, chatBgColor });
     }
   }

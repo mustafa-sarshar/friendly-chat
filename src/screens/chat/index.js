@@ -195,16 +195,6 @@ class Chat extends Component {
             fontWeight: "bold",
           },
         }}
-        // textStyle={{
-        //   left: {
-        //     color: customColorInner,
-        //     fontWeight: "bold",
-        //   },
-        //   right: {
-        //     color: customColorInner,
-        //     fontWeight: "bold",
-        //   },
-        // }}
         timeTextStyle={{
           left: {
             color: customColorInner,
