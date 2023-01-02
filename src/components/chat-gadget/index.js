@@ -1,73 +1,102 @@
 import React, { Component } from "react";
 import { View, KeyboardAvoidingView, Platform, LogBox } from "react-native";
 import { GiftedChat, Bubble } from "react-native-gifted-chat";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { firebaseConfig } from "../../config/firebase";
-const firebase = require("firebase");
-require("firebase/firestore");
+import { initializeApp } from "firebase/app";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp,
+  where,
+} from "firebase/firestore";
+import {
+  getAuth,
+  signInAnonymously,
+  onAuthStateChanged,
+  signOut,
+  deleteUser,
+} from "firebase/auth";
+
+import { firebaseConfig, COLLECTION_NAME } from "../../config/firebase";
+
+import styles from "./styles";
+import Robot from "./robot";
 
 LogBox.ignoreLogs([
   "AsyncStorage has been extracted from react-native core and will be removed in a future release.",
 ]);
-
-import styles from "./styles";
 
 class ChatGadget extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      uid: 0,
       messages: [],
     };
 
     // Bind the methods to the class
     this.handleUpdateChatStyles = this.handleUpdateChatStyles.bind(this);
+    this.onCollectionUpdate = this.onCollectionUpdate.bind(this);
 
-    // Connect to the Database and the collection
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
+    // Init the firebase app
+    this.firebaseApp = initializeApp(firebaseConfig);
+    this.firebaseColRef = undefined;
+    // Get the database
+    this.firebaseStore = getFirestore(this.firebaseApp);
+
+    this.robot = Robot();
   }
 
   componentDidMount() {
-    // Add Message to the messages state
-    this.referenceMessages = firebase.firestore().collection("messages");
+    // Set a Collection Ref
+    this.firebaseColRef = collection(this.firebaseStore, COLLECTION_NAME);
+    // Get Authentication
+    this.firebaseAuth = getAuth(this.firebaseApp);
+    this.unsubscribeAuth = onAuthStateChanged(
+      this.firebaseAuth,
+      async (user) => {
+        if (!user) {
+          await signInAnonymously(this.firebaseAuth)
+            .then((data) => {
+              console.log("Signed in successfully!");
+            })
+            .catch((err) => {
+              console.error(err.message);
+            });
+        } else {
+          console.log("currentUser", user.uid);
+          this.setState({
+            uid: user.uid,
+          });
 
-    this.unsubscribe = this.referenceMessages.onSnapshot(
-      this.onCollectionUpdate
+          // Define a query
+          this.firebaseQuery = query(
+            this.firebaseColRef,
+            where("uid", "==", user.uid),
+            orderBy("serverReceivedAt", "desc")
+          );
+          // Subscribe a snapshot to the collection
+          this.unsubscribeSnapshots = onSnapshot(
+            this.firebaseQuery,
+            this.onCollectionUpdate
+          );
+        }
+      }
     );
-
-    // this.setState((prevState) => {
-    //   return {
-    //     ...prevState,
-    //     messages: [
-    //       {
-    //         _id: 1,
-    //         text: "Hello developer",
-    //         createdAt: new Date(),
-    //         user: {
-    //           _id: 2,
-    //           name: "React Native",
-    //           avatar: "https://placeimg.com/140/140/any",
-    //         },
-    //       },
-    //       {
-    //         _id: 2,
-    //         text: "This is a system message",
-    //         createdAt: new Date(),
-    //         system: true,
-    //       },
-    //     ],
-    //   };
-    // });
 
     // Update chat background color
     this.handleUpdateChatStyles();
   }
 
   componentWillUnmount() {
-    this.unsubscribe();
+    if (this.unsubscribeSnapshots) {
+      this.unsubscribeSnapshots();
+    }
   }
 
   componentDidUpdate() {
@@ -79,9 +108,6 @@ class ChatGadget extends Component {
 
     if (params?.chatBgColor) {
       // Update the styles based on the selected ChatBgColor
-      styles.chatArea = {
-        ...styles.chatArea,
-      };
       styles.giftedChatContainer = {
         ...styles.giftedChatContainer,
         backgroundColor: `${params.chatBgColor.code}30`,
@@ -96,25 +122,24 @@ class ChatGadget extends Component {
         ...styles.subContainer,
         backgroundColor: `${params.chatBgColor.code}90`,
       };
-      styles.lblBold = {
-        ...styles.lblBold,
-        color:
-          params.chatBgColor.name === "White"
-            ? "#000000"
-            : params.chatBgColor.code,
-      };
-      styles.btn = {
-        ...styles.btn,
-        width: 90,
-        borderColor:
-          params.chatBgColor.name === "White"
-            ? "#000000"
-            : params.chatBgColor.code,
-      };
-      styles.btnContainer = {
-        ...styles.btnContainer,
-        backgroundColor: `${params.chatBgColor.code}30`,
-      };
+    }
+  }
+
+  handleSignIn(user) {
+    console.log("handleSignIn", user);
+
+    if (!user) {
+      signInAnonymously(this.firebaseAuth)
+        .then((cred) => {
+          console.log("signInAnonymously", cred);
+          this.setState({
+            uid: cred.data().uid,
+            messages: [],
+          });
+        })
+        .catch((err) => {
+          console.error(err.message);
+        });
     }
   }
 
@@ -124,16 +149,57 @@ class ChatGadget extends Component {
     }));
   }
 
-  onCollectionUpdate = (querySnapshot) => {
+  onMessageSend(messages = []) {
+    const { uid } = this.state;
+
+    addDoc(this.firebaseColRef, {
+      _id: messages[0]._id,
+      user: messages[0].user,
+      text: messages[0].text,
+      createdAt: messages[0].createdAt,
+      serverReceivedAt: serverTimestamp(),
+      uid: uid,
+    })
+      .then(async () => {
+        console.log("Message sent successfully");
+        addDoc(this.firebaseColRef, {
+          _id: Math.floor(Math.random() * 1000),
+          user: {
+            _id: 2,
+            name: "Robot",
+            avatar: "https://picsum.photos/id/30/140/140",
+          },
+          text: await this.robot(),
+          createdAt: new Date(),
+          serverReceivedAt: serverTimestamp(),
+          uid: uid,
+        })
+          .then(() => {
+            console.log("Automatic reply sent successfully");
+          })
+          .catch((err) => {
+            console.error(err.message);
+          });
+      })
+      .catch((err) => {
+        console.error(err.message);
+      });
+  }
+
+  onCollectionUpdate = (snapshot) => {
     const messages = [];
 
-    querySnapshot.forEach((doc) => {
+    snapshot.docs.forEach((doc) => {
+      const { uid } = this.state;
       const data = doc.data();
+
       messages.push({
         _id: data._id,
+        user: data.user,
         text: data.text,
         createdAt: data.createdAt.toDate(),
-        user: data.user,
+        serverReceivedAt: serverTimestamp(),
+        uid: uid,
       });
     });
 
@@ -150,7 +216,6 @@ class ChatGadget extends Component {
     let customColorOuter = "#FFFFFF50";
     let customColorInner = "#FFFFFF";
 
-    console.log(params);
     if (params?.chatBgColor) {
       if (params.chatBgColor.name === "White") {
         customColorBG = params.chatBgColor.code;
@@ -194,8 +259,27 @@ class ChatGadget extends Component {
     );
   }
 
+  handleReset() {
+    const { uid } = this.state;
+    const { currentUser } = this.firebaseAuth;
+
+    if (currentUser) {
+      this.unsubscribeAuth();
+      signOut(this.firebaseAuth).then(() => {
+        deleteUser(currentUser).then(() => {
+          console.log(`The user: ${uid} signed out successfully`);
+          this.setState({
+            uid: 0,
+            message: [],
+          });
+        });
+      });
+    }
+  }
+
   render() {
     const { messages } = this.state;
+    const { params } = this.props;
 
     return (
       <View style={styles.subContainer}>
@@ -203,9 +287,12 @@ class ChatGadget extends Component {
           <GiftedChat
             renderBubble={this.renderBubble.bind(this)}
             messages={messages}
-            onSend={(messages) => this.handleSendMessage(messages)}
+            // onSend={(messages) => this.handleSendMessage(messages)}
+            onSend={(messages) => this.onMessageSend(messages)}
             user={{
               _id: 1,
+              name: params.username && params.username,
+              avatar: "https://picsum.photos/id/1/140/140",
             }}
           />
           {Platform.OS === "android" ? (

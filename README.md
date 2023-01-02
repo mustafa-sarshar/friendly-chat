@@ -34,3 +34,5 @@ To build a chat app for mobile devices using React Native. The app will provide 
 
 - Freepik - Flaticon:
   - [user icons]("https://www.flaticon.com/free-icons/user")
+- Avatars
+  - [Avatar Icon](https://iconscout.com/icons/avatar), by [Dmitriy Bondarchuk](https://iconscout.com/contributors/dmitriy-bondarchuk)

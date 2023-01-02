@@ -8,4 +8,6 @@ const firebaseConfig = {
   measurementId: "G-5XTR15JFWV",
 };
 
-export { firebaseConfig };
+const COLLECTION_NAME = "Messages";
+
+export { firebaseConfig, COLLECTION_NAME };
