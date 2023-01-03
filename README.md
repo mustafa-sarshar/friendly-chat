@@ -32,5 +32,9 @@ To build a chat app for mobile devices using React Native. The app will provide 
 
 ### Icons were downloaded from:
 
-- Freepik - Flaticon:
-  - [user icons]("https://www.flaticon.com/free-icons/user")
+- [User Icons]("https://www.flaticon.com/free-icons/user"), created by [Freepik - Flaticon](https://www.freepik.com/?_gl=1*1wtsfdz*fp_ga*MTI1MTM1MTI2MS4xNjcyNjkzMzIy*fp_ga_1ZY8468CQB*MTY3MjY5MzMyMS4xLjEuMTY3MjY5MzQ0NS41Mi4wLjA.*test_ga*MTI1MTM1MTI2MS4xNjcyNjkzMzIy*test_ga_523JXC6VL7*MTY3MjY5MzMyMi4xLjEuMTY3MjY5MzQ0NS41Mi4wLjA.)
+- [Avatar Icon](https://iconscout.com/icons/avatar), created by [Dmitriy Bondarchuk](https://iconscout.com/contributors/dmitriy-bondarchuk)
+
+### Background images were downloaded from:
+
+- [unDraw](https://undraw.co/illustrations), created by [Katerina Limpitsouni](https://twitter.com/ninaLimpi)
