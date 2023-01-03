@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { View, KeyboardAvoidingView, Platform, LogBox } from "react-native";
-import { GiftedChat, Bubble } from "react-native-gifted-chat";
+import { GiftedChat, Bubble, InputToolbar } from "react-native-gifted-chat";
 
 import { initializeApp } from "firebase/app";
 import {
@@ -20,11 +20,16 @@ import {
   signOut,
   deleteUser,
 } from "firebase/auth";
-
-import { firebaseConfig, COLLECTION_NAME } from "../../config/firebase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import NetInfo from "@react-native-community/netinfo";
 
 import styles from "./styles";
 import Robot from "../../utils/robot";
+
+// Assign your own firebase configurations to firebaseConfigs
+// Please create indexes afterwards.
+const firebaseConfig = require("../../../.firebaseConfig.json");
+const COLLECTION_NAME = "Messages";
 
 LogBox.ignoreLogs([
   "AsyncStorage has been extracted from react-native core and will be removed in a future release.",
@@ -37,11 +42,20 @@ class ChatGadget extends Component {
     this.state = {
       uid: 0,
       messages: [],
+      isConnected: false,
     };
 
     // Bind the methods to the class
+    this.runAppOffline = this.runAppOffline.bind(this);
+    this.runAppOnline = this.runAppOnline.bind(this);
     this.handleUpdateChatStyles = this.handleUpdateChatStyles.bind(this);
+    this.renderBubble = this.renderBubble.bind(this);
+    this.renderInputToolbar = this.renderInputToolbar.bind(this);
+    this.checkNetConnection = this.checkNetConnection.bind(this);
     this.onCollectionUpdate = this.onCollectionUpdate.bind(this);
+    this.getMessagesLocally = this.getMessagesLocally.bind(this);
+    this.saveMessagesLocally = this.saveMessagesLocally.bind(this);
+    this.deleteMessagesLocally = this.deleteMessagesLocally.bind(this);
 
     // Init the firebase app
     this.firebaseApp = initializeApp(firebaseConfig);
@@ -53,6 +67,29 @@ class ChatGadget extends Component {
   }
 
   componentDidMount() {
+    // Check the internet connection
+    this.checkNetConnection();
+
+    // Update chat background color
+    this.handleUpdateChatStyles();
+  }
+
+  componentWillUnmount() {
+    if (this.unsubscribeSnapshots) {
+      this.unsubscribeSnapshots();
+    }
+  }
+
+  componentDidUpdate() {
+    // this.handleUpdateChatStyles();
+    // this.checkNetConnection();
+  }
+
+  runAppOffline() {
+    this.getMessagesLocally();
+  }
+
+  runAppOnline() {
     // Set a Collection Ref
     this.firebaseColRef = collection(this.firebaseStore, COLLECTION_NAME);
     // Get Authentication
@@ -88,19 +125,32 @@ class ChatGadget extends Component {
         }
       }
     );
-
-    // Update chat background color
-    this.handleUpdateChatStyles();
   }
 
-  componentWillUnmount() {
-    if (this.unsubscribeSnapshots) {
-      this.unsubscribeSnapshots();
-    }
-  }
-
-  componentDidUpdate() {
-    this.handleUpdateChatStyles();
+  checkNetConnection() {
+    NetInfo.fetch().then((connection) => {
+      if (connection.isConnected) {
+        this.setState(
+          {
+            isConnected: true,
+          },
+          () => {
+            console.log("The app runs in online mode");
+            this.runAppOnline();
+          }
+        );
+      } else {
+        this.setState(
+          {
+            isConnected: false,
+          },
+          () => {
+            console.log("The app runs in offline mode");
+            this.runAppOffline();
+          }
+        );
+      }
+    });
   }
 
   handleUpdateChatStyles() {
@@ -144,9 +194,14 @@ class ChatGadget extends Component {
   }
 
   handleSendMessage(messages = []) {
-    this.setState((previousState) => ({
-      messages: GiftedChat.append(previousState.messages, messages),
-    }));
+    this.setState(
+      (previousState) => ({
+        messages: GiftedChat.append(previousState.messages, messages),
+      }),
+      () => {
+        this.saveMessagesLocally();
+      }
+    );
   }
 
   onMessageSend(messages = []) {
@@ -162,7 +217,9 @@ class ChatGadget extends Component {
     })
       .then(async () => {
         console.log("Message sent successfully");
-        addDoc(this.firebaseColRef, {
+        
+        // Just for Demo Purposes //////////////////////////////////////
+        await addDoc(this.firebaseColRef, {
           _id: Math.floor(Math.random() * 1000),
           user: {
             _id: 2,
@@ -180,6 +237,7 @@ class ChatGadget extends Component {
           .catch((err) => {
             console.error(err.message);
           });
+        ////////////////////////////////////////////////////////////////
       })
       .catch((err) => {
         console.error(err.message);
@@ -203,10 +261,64 @@ class ChatGadget extends Component {
       });
     });
 
-    this.setState({
-      messages,
-    });
+    this.setState(
+      {
+        messages,
+      },
+      () => {
+        console.log(`onCollectionUpdate, length: ${messages.length}`);
+        this.saveMessagesLocally();
+      }
+    );
   };
+
+  async getMessagesLocally() {
+    let messages = "";
+    try {
+      messages = (await AsyncStorage.getItem("messages")) || [];
+      this.setState({
+        messages: JSON.parse(messages),
+      });
+      console.log(
+        `Messages retrieved from AsyncStorage. length: ${messages.length}`
+      );
+    } catch (err) {
+      console.log(err.message);
+    }
+  }
+
+  async saveMessagesLocally() {
+    try {
+      const { messages } = this.state;
+      await AsyncStorage.setItem("messages", JSON.stringify(messages));
+      console.log(`Messages saved in AsyncStorage. length: ${messages.length}`);
+    } catch (err) {
+      console.log(err.message);
+    }
+  }
+
+  async deleteMessagesLocally() {
+    try {
+      await AsyncStorage.removeItem("messages");
+      this.setState({
+        messages: [],
+      });
+      console.log(
+        `Messages deleted from AsyncStorage. length: ${messages.length}`
+      );
+    } catch (err) {
+      console.log(err.message);
+    }
+  }
+
+  // Update the InputToolbar
+  renderInputToolbar(props) {
+    const { isConnected } = this.state;
+
+    if (isConnected === true) {
+      return <InputToolbar {...props} />;
+    }
+  }
 
   // Add custom styles to messages via Bubble
   renderBubble(props) {
@@ -285,8 +397,10 @@ class ChatGadget extends Component {
       <View style={styles.subContainer}>
         <View style={styles.giftedChatContainer}>
           <GiftedChat
-            renderBubble={this.renderBubble.bind(this)}
+            renderInputToolbar={this.renderInputToolbar}
+            renderBubble={this.renderBubble}
             messages={messages}
+            // onSend={(messages) => this.handleSendMessage(messages)}
             onSend={(messages) => this.onMessageSend(messages)}
             user={{
               _id: 1,
