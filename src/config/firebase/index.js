@@ -1,11 +1,11 @@
 const firebaseConfig = {
-  apiKey: "AIzaSyBKDfD97aPTZwn2No1LJxKuitXb1Egmtg0",
-  authDomain: "friendly-chat-53b81.firebaseapp.com",
-  projectId: "friendly-chat-53b81",
-  storageBucket: "friendly-chat-53b81.appspot.com",
-  messagingSenderId: "360808675289",
-  appId: "1:360808675289:web:0999218352d1d5a4df8bc8",
-  measurementId: "G-5XTR15JFWV",
+  apiKey: "AIzaSyCY1un-4uiKvz97b63m9WywAfLLzzEfcoo",
+  authDomain: "friendly-chat-b46a2.firebaseapp.com",
+  projectId: "friendly-chat-b46a2",
+  storageBucket: "friendly-chat-b46a2.appspot.com",
+  messagingSenderId: "836012007398",
+  appId: "1:836012007398:web:6ff764d44940aadcb80027",
+  measurementId: "G-BE982DQDPH",
 };
 
 const COLLECTION_NAME = "Messages";

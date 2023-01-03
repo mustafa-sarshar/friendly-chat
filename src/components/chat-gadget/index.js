@@ -24,7 +24,7 @@ import {
 import { firebaseConfig, COLLECTION_NAME } from "../../config/firebase";
 
 import styles from "./styles";
-import Robot from "./robot";
+import Robot from "../../utils/robot";
 
 LogBox.ignoreLogs([
   "AsyncStorage has been extracted from react-native core and will be removed in a future release.",
@@ -287,7 +287,6 @@ class ChatGadget extends Component {
           <GiftedChat
             renderBubble={this.renderBubble.bind(this)}
             messages={messages}
-            // onSend={(messages) => this.handleSendMessage(messages)}
             onSend={(messages) => this.onMessageSend(messages)}
             user={{
               _id: 1,
