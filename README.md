@@ -1,4 +1,4 @@
-# friendly-chat
+# (musto) friendly-chat
 
 ## OBJECTIVES
 
@@ -29,6 +29,42 @@ To build a chat app for mobile devices using React Native. The app will provide 
 - Data gets stored online and offline.
 
 ## NOTES:
+
+### HOW TO USE
+
+1. Please, create a configuration file, named ".firebaseConfig.json" in the root directory (where tha App.js file is located), and add all Firebase-related configurations to it, as follows:
+
+```json
+{
+  "appConfig": {
+    "apiKey": "YOUR_FIREBASE_API_KEY",
+    "authDomain": "YOUR_FIREBASE_AUTH_DOMAIN",
+    "projectId": "YOUR_FIREBASE_PROJECT_ID",
+    "storageBucket": "YOUR_FIREBASE_STORAGE_BUCKET",
+    "messagingSenderId": "YOUR_FIREBASE_MESSAGING_SENDER_ID",
+    "appId": "YOUR_FIREBASE_APP_ID",
+    "measurementId": "YOUR_FIREBASE_MEASUREMENT_ID"
+  },
+  "dbConfig": {
+    "collectionName": "YOUR_FIREBASE_DATABASE_COLLECTION_NAME_FOR_ALL_MESSAGES"
+  },
+  "storageConfig": {
+    "bucketURL": "YOUR_FIREBASE_STORAGE_BUCKET_URL_FOR_IMAGES",
+    "directoryName": "YOUR_FIREBASE_STORAGE_DIRECTORY_NAME_FOR_IMAGES"
+  }
+}
+```
+
+2. Add and enable an Index for the Collection specified in the collectionName above ( Fields indexed: uid: Ascending, serverReceivedAt: Descending)
+3. Run **npm install** in terminal from the root directory to install all necessary packages and dependencies.
+4. Run **npm start** in terminal from the root directory to run the Expo.
+5. Follow the instructions provided by the Expo.
+6. Enjoy it.
+
+## LIVE DEMO
+[YouTube]()
+
+## COPY RIGHTS
 
 ### Icons were downloaded from:
 
