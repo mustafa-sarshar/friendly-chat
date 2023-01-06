@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { View, KeyboardAvoidingView, Platform, LogBox } from "react-native";
 import { GiftedChat, Bubble, InputToolbar } from "react-native-gifted-chat";
+import MapView from "react-native-maps";
 
 import { initializeApp } from "firebase/app";
 import {
@@ -20,19 +21,26 @@ import {
   signOut,
   deleteUser,
 } from "firebase/auth";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NetInfo from "@react-native-community/netinfo";
+import GiftedChatCustomActions from "../gifted-chat-custom-actions";
 
 import styles from "./styles";
 import Robot from "../../utils/robot";
 
 // Assign your own firebase configurations to firebaseConfigs
 // Please create indexes afterwards.
-const firebaseConfig = require("../../../.firebaseConfig.json");
-const COLLECTION_NAME = "Messages";
+const firebaseConfigs = require("../../../.firebaseConfig.json");
 
 LogBox.ignoreLogs([
   "AsyncStorage has been extracted from react-native core and will be removed in a future release.",
+  `Key "cancelled" in the image picker result is deprecated and will be removed in SDK 48, use "canceled" instead`,
 ]);
 
 class ChatGadget extends Component {
@@ -48,17 +56,20 @@ class ChatGadget extends Component {
     // Bind the methods to the class
     this.runAppOffline = this.runAppOffline.bind(this);
     this.runAppOnline = this.runAppOnline.bind(this);
-    this.handleUpdateChatStyles = this.handleUpdateChatStyles.bind(this);
-    this.renderBubble = this.renderBubble.bind(this);
-    this.renderInputToolbar = this.renderInputToolbar.bind(this);
+    this.updateChatStylesHandler = this.updateChatStylesHandler.bind(this);
+    this.renderActionsHandler = this.renderActionsHandler.bind(this);
+    this.renderBubbleHandler = this.renderBubbleHandler.bind(this);
+    this.renderInputToolbarHandler = this.renderInputToolbarHandler.bind(this);
     this.checkNetConnection = this.checkNetConnection.bind(this);
     this.onCollectionUpdate = this.onCollectionUpdate.bind(this);
     this.getMessagesLocally = this.getMessagesLocally.bind(this);
     this.saveMessagesLocally = this.saveMessagesLocally.bind(this);
     this.deleteMessagesLocally = this.deleteMessagesLocally.bind(this);
+    this.uploadImageToFirebaseHandler =
+      this.uploadImageToFirebaseHandler.bind(this);
 
     // Init the firebase app
-    this.firebaseApp = initializeApp(firebaseConfig);
+    this.firebaseApp = initializeApp(firebaseConfigs.appConfig);
     this.firebaseColRef = undefined;
     // Get the database
     this.firebaseStore = getFirestore(this.firebaseApp);
@@ -66,32 +77,40 @@ class ChatGadget extends Component {
     this.robot = Robot();
   }
 
-  componentDidMount() {
+  componentDidMount = () => {
     // Check the internet connection
     this.checkNetConnection();
-
     // Update chat background color
-    this.handleUpdateChatStyles();
-  }
+    this.updateChatStylesHandler();
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     if (this.unsubscribeSnapshots) {
       this.unsubscribeSnapshots();
     }
-  }
+    // Uncomment it, if you wish to unsubscribe the user each time the user returns to the start screen
+    // if (this.unsubscribeAuth) {
+    //   this.unsubscribeAuth();
+    // }
+  };
 
-  componentDidUpdate() {
-    // this.handleUpdateChatStyles();
-    // this.checkNetConnection();
-  }
+  //define title in navigation bar
+  static navigationOptions = ({ navigation }) => {
+    return {
+      title: `${navigation.state.params.userName}'s Chat`,
+    };
+  };
 
-  runAppOffline() {
+  runAppOffline = () => {
     this.getMessagesLocally();
-  }
+  };
 
-  runAppOnline() {
+  runAppOnline = () => {
     // Set a Collection Ref
-    this.firebaseColRef = collection(this.firebaseStore, COLLECTION_NAME);
+    this.firebaseColRef = collection(
+      this.firebaseStore,
+      firebaseConfigs.dbConfig.collectionName
+    );
     // Get Authentication
     this.firebaseAuth = getAuth(this.firebaseApp);
     this.unsubscribeAuth = onAuthStateChanged(
@@ -109,6 +128,7 @@ class ChatGadget extends Component {
           console.log("currentUser", user.uid);
           this.setState({
             uid: user.uid,
+            messages: [],
           });
 
           // Define a query
@@ -117,7 +137,7 @@ class ChatGadget extends Component {
             where("uid", "==", user.uid),
             orderBy("serverReceivedAt", "desc")
           );
-          // Subscribe a snapshot to the collection
+          // // Subscribe a snapshot to the collection
           this.unsubscribeSnapshots = onSnapshot(
             this.firebaseQuery,
             this.onCollectionUpdate
@@ -125,9 +145,9 @@ class ChatGadget extends Component {
         }
       }
     );
-  }
+  };
 
-  checkNetConnection() {
+  checkNetConnection = () => {
     NetInfo.fetch().then((connection) => {
       if (connection.isConnected) {
         this.setState(
@@ -151,9 +171,9 @@ class ChatGadget extends Component {
         );
       }
     });
-  }
+  };
 
-  handleUpdateChatStyles() {
+  updateChatStylesHandler = () => {
     const { params } = this.props;
 
     if (params?.chatBgColor) {
@@ -173,15 +193,12 @@ class ChatGadget extends Component {
         backgroundColor: `${params.chatBgColor.code}90`,
       };
     }
-  }
+  };
 
-  handleSignIn(user) {
-    console.log("handleSignIn", user);
-
+  signInHandle = (user) => {
     if (!user) {
       signInAnonymously(this.firebaseAuth)
         .then((cred) => {
-          console.log("signInAnonymously", cred);
           this.setState({
             uid: cred.data().uid,
             messages: [],
@@ -191,33 +208,36 @@ class ChatGadget extends Component {
           console.error(err.message);
         });
     }
-  }
+  };
 
-  handleSendMessage(messages = []) {
+  sendMessageHandler = (messages = []) => {
     this.setState(
       (previousState) => ({
         messages: GiftedChat.append(previousState.messages, messages),
       }),
       () => {
-        this.saveMessagesLocally();
+        this.addMessageToFirebase();
+        // this.saveMessagesLocally();
       }
     );
-  }
+  };
 
-  onMessageSend(messages = []) {
-    const { uid } = this.state;
+  addMessageToFirebase = () => {
+    const { uid, messages } = this.state;
 
     addDoc(this.firebaseColRef, {
       _id: messages[0]._id,
       user: messages[0].user,
-      text: messages[0].text,
+      text: messages[0].text || "",
       createdAt: messages[0].createdAt,
       serverReceivedAt: serverTimestamp(),
+      image: messages[0].image || null,
+      location: messages[0].location || null,
       uid: uid,
     })
       .then(async () => {
         console.log("Message sent successfully");
-        
+
         // Just for Demo Purposes //////////////////////////////////////
         await addDoc(this.firebaseColRef, {
           _id: Math.floor(Math.random() * 1000),
@@ -242,7 +262,7 @@ class ChatGadget extends Component {
       .catch((err) => {
         console.error(err.message);
       });
-  }
+  };
 
   onCollectionUpdate = (snapshot) => {
     const messages = [];
@@ -254,9 +274,11 @@ class ChatGadget extends Component {
       messages.push({
         _id: data._id,
         user: data.user,
-        text: data.text,
+        text: data.text || "",
         createdAt: data.createdAt.toDate(),
         serverReceivedAt: serverTimestamp(),
+        image: data.image || null,
+        location: data.location || null,
         uid: uid,
       });
     });
@@ -266,62 +288,168 @@ class ChatGadget extends Component {
         messages,
       },
       () => {
-        console.log(`onCollectionUpdate, length: ${messages.length}`);
         this.saveMessagesLocally();
       }
     );
   };
 
-  async getMessagesLocally() {
+  getMessagesLocally = async () => {
     let messages = "";
     try {
       messages = (await AsyncStorage.getItem("messages")) || [];
       this.setState({
         messages: JSON.parse(messages),
       });
-      console.log(
-        `Messages retrieved from AsyncStorage. length: ${messages.length}`
-      );
     } catch (err) {
-      console.log(err.message);
+      console.error(err.message);
     }
-  }
+  };
 
-  async saveMessagesLocally() {
+  saveMessagesLocally = async () => {
     try {
       const { messages } = this.state;
       await AsyncStorage.setItem("messages", JSON.stringify(messages));
       console.log(`Messages saved in AsyncStorage. length: ${messages.length}`);
     } catch (err) {
-      console.log(err.message);
+      console.error(err.message);
     }
-  }
+  };
 
-  async deleteMessagesLocally() {
+  deleteMessagesLocally = async () => {
     try {
       await AsyncStorage.removeItem("messages");
       this.setState({
         messages: [],
       });
-      console.log(
-        `Messages deleted from AsyncStorage. length: ${messages.length}`
-      );
     } catch (err) {
-      console.log(err.message);
+      console.error(err.message);
     }
-  }
+  };
+
+  // Upload images to Firebase
+  uploadImageToFirebaseHandler = async (uri, sendHandler) => {
+    const blob = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      xhr.onload = () => {
+        resolve(xhr.response);
+      };
+      xhr.onerror = (err) => {
+        console.error("XHR error:", err.message);
+        reject(new TypeError("Network request failed"));
+      };
+      xhr.responseType = "blob";
+      xhr.open("GET", uri, true);
+      xhr.send(null);
+    });
+
+    const imageNameBefore = uri.split("/");
+    const imageName = imageNameBefore[imageNameBefore.length - 1];
+    const storageRef = ref(
+      getStorage(this.firebaseApp, firebaseConfigs.storageConfig.bucketURL),
+      `${firebaseConfigs.storageConfig.directoryName}/${imageName}`
+    );
+    const uploadTask = uploadBytesResumable(storageRef, blob);
+
+    // Register three observers:
+    // 1. 'state_changed' observer, called any time the state changes
+    // 2. Error observer, called on failure
+    // 3. Completion observer, called on successful completion
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log("Upload is " + progress + "% done");
+        switch (snapshot.state) {
+          case "paused":
+            console.log("Upload is paused");
+            break;
+          case "running":
+            console.log("Upload is running");
+            break;
+        }
+      },
+      (err) => {
+        console.error("uploadTask error:", err.message);
+        blob.close();
+      },
+      () => {
+        // Handle successful uploads on complete
+        getDownloadURL(uploadTask.snapshot.ref)
+          .then((downloadURL) => {
+            console.log("File available at", downloadURL);
+            sendHandler([{ _id: 1, image: `${downloadURL}` }]);
+          })
+          .catch((err) => {
+            console.error("getDownloadURL failed:", err.message);
+          })
+          .finally(() => {
+            blob.close();
+          });
+      }
+    );
+  };
+
+  //
+  renderActionsHandler = (props) => {
+    const { params } = this.props;
+    let wrapperStyle;
+    let iconTextStyle;
+
+    if (params?.chatBgColor) {
+      if (params.chatBgColor.name === "White") {
+        wrapperStyle = {
+          borderColor: "black",
+        };
+        iconTextStyle = { color: "black" };
+      } else {
+        wrapperStyle = {
+          borderColor: params.chatBgColor.code,
+        };
+        iconTextStyle = { color: params.chatBgColor.code };
+      }
+    }
+
+    return (
+      <GiftedChatCustomActions
+        {...props}
+        wrapperStyle={wrapperStyle}
+        iconTextStyle={iconTextStyle}
+      />
+    );
+  };
+
+  renderCustomView = (props) => {
+    const { currentMessage } = props;
+
+    if (currentMessage.location) {
+      return (
+        <MapView
+          style={styles.mapView}
+          region={{
+            latitude: currentMessage.location.latitude,
+            longitude: currentMessage.location.longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+        />
+      );
+    }
+    return null;
+  };
 
   // Update the InputToolbar
-  renderInputToolbar(props) {
+  renderInputToolbarHandler = (props) => {
     const { isConnected } = this.state;
 
     if (isConnected === true) {
       return <InputToolbar {...props} />;
     }
-  }
+  };
 
   // Add custom styles to messages via Bubble
-  renderBubble(props) {
+  renderBubbleHandler = (props) => {
     const { params } = this.props;
 
     let customColorBG = "#000000";
@@ -369,9 +497,9 @@ class ChatGadget extends Component {
         }}
       />
     );
-  }
+  };
 
-  handleReset() {
+  handleReset = () => {
     const { uid } = this.state;
     const { currentUser } = this.firebaseAuth;
 
@@ -387,9 +515,9 @@ class ChatGadget extends Component {
         });
       });
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const { messages } = this.state;
     const { params } = this.props;
 
@@ -397,16 +525,17 @@ class ChatGadget extends Component {
       <View style={styles.subContainer}>
         <View style={styles.giftedChatContainer}>
           <GiftedChat
-            renderInputToolbar={this.renderInputToolbar}
-            renderBubble={this.renderBubble}
             messages={messages}
-            // onSend={(messages) => this.handleSendMessage(messages)}
-            onSend={(messages) => this.onMessageSend(messages)}
+            renderInputToolbar={this.renderInputToolbarHandler}
+            renderActions={this.renderActionsHandler}
+            renderCustomView={this.renderCustomView}
+            renderBubble={this.renderBubbleHandler}
+            onSend={(messages) => this.sendMessageHandler(messages)}
             user={{
               _id: 1,
               name: params.username && params.username,
-              avatar: "https://picsum.photos/id/1/140/140",
             }}
+            onUploadImageToFirebase={this.uploadImageToFirebaseHandler}
           />
           {Platform.OS === "android" ? (
             <KeyboardAvoidingView behavior="height" />
@@ -414,7 +543,7 @@ class ChatGadget extends Component {
         </View>
       </View>
     );
-  }
+  };
 }
 
 export default ChatGadget;

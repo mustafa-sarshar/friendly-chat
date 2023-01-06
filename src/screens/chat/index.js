@@ -16,15 +16,15 @@ class Chat extends Component {
     this.handleGoToStart = this.handleGoToStart.bind(this);
   }
 
-  componentDidMount() {
+  componentDidMount = () => {
     this.handleUpdateUsername();
-  }
+  };
 
-  componentDidUpdate() {
+  componentDidUpdate = () => {
     this.handleUpdateUsername();
-  }
+  };
 
-  handleUpdateUsername() {
+  handleUpdateUsername = () => {
     const { route, navigation } = this.props;
 
     if (route.params?.username) {
@@ -34,14 +34,14 @@ class Chat extends Component {
     } else {
       navigation.setOptions({ title: "Please login first" });
     }
-  }
+  };
 
-  handleGoToStart() {
+  handleGoToStart = () => {
     const { navigation } = this.props;
     navigation.navigate("Start");
-  }
+  };
 
-  render() {
+  render = () => {
     const { params } = this.props.route;
 
     return (
@@ -63,7 +63,7 @@ class Chat extends Component {
         </ImageBackground>
       </View>
     );
-  }
+  };
 }
 
 export default Chat;

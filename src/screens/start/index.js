@@ -24,9 +24,9 @@ class Start extends Component {
     this.handleGoToChat = this.handleGoToChat.bind(this);
   }
 
-  handleTextChange(username) {
+  handleTextChange = (username) => {
     this.setState({ username });
-  }
+  };
 
   handleChatBgColorChange(color) {
     this.setState((prevState) => {
@@ -34,7 +34,7 @@ class Start extends Component {
     });
   }
 
-  handleGoToChat(evt) {
+  handleGoToChat = (evt) => {
     evt.preventDefault();
 
     const { username, chatBgColor } = this.state;
@@ -47,9 +47,9 @@ class Start extends Component {
     } else {
       navigation.navigate("Chat", { username, chatBgColor });
     }
-  }
+  };
 
-  render() {
+  render = () => {
     const { username, chatBgColor } = this.state;
     const btnTitleColor =
       chatBgColor.name === "White" ? "#000000" : chatBgColor.code;
@@ -81,7 +81,7 @@ class Start extends Component {
         </ImageBackground>
       </View>
     );
-  }
+  };
 }
 
 export default Start;

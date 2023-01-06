@@ -24,6 +24,13 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
+
+  mapView: {
+    width: 150,
+    height: 100,
+    borderRadius: 13,
+    margin: 3,
+  },
 });
 
 export default styles;
