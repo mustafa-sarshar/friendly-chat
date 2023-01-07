@@ -10,6 +10,9 @@ const GoToChatButton = (props) => {
   return (
     <View style={[styles.btnContainer, { backgroundColor: `${btnBgColor}20` }]}>
       <Pressable
+        accessible={true}
+        accessibilityLabel="button"
+        accessibilityHint="Press here to go to the chat room"
         style={[styles.btn, { borderColor: btnTitleColor }]}
         onPress={onGoToChat}
       >

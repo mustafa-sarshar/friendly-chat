@@ -5,13 +5,13 @@ export const colors = {
   red: "#960905",
   green: "#275c33",
   blue: "#0245cc",
-  gray: "#777a80",
+  black: "#000000",
 };
 
 const GLOBAL_STYLES = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -48,7 +48,6 @@ const GLOBAL_STYLES = StyleSheet.create({
 
   icon: {
     margin: 5,
-    paddingBottom: 30,
     height: 24,
     width: 24,
   },

@@ -126,13 +126,12 @@ class GiftedChatCustomActions extends Component {
 
   render = () => {
     const { wrapperStyle, iconTextStyle } = this.props;
-    console.log(wrapperStyle);
 
     return (
       <TouchableOpacity
         accessible={true}
         accessibilityLabel="More options"
-        accessibilityHint="Let’s you choose to send an image or your geolocation."
+        accessibilityHint="Let’s choose to send an image, take a photo or share your geolocation."
         style={[styles.container]}
         onPress={this.actionHandler}
       >

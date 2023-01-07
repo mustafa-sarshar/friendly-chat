@@ -1,7 +1,8 @@
 import React, { Component } from "react";
-import { View, KeyboardAvoidingView, Platform, LogBox } from "react-native";
+import { View, KeyboardAvoidingView, Platform } from "react-native";
 import { GiftedChat, Bubble, InputToolbar } from "react-native-gifted-chat";
 import MapView from "react-native-maps";
+import NetInfo from "@react-native-community/netinfo";
 
 import { initializeApp } from "firebase/app";
 import {
@@ -28,20 +29,15 @@ import {
   getDownloadURL,
 } from "firebase/storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import NetInfo from "@react-native-community/netinfo";
 import GiftedChatCustomActions from "../gifted-chat-custom-actions";
 
 import styles from "./styles";
 import Robot from "../../utils/robot";
+import avatars_default from "../../assets/data/index";
 
 // Assign your own firebase configurations to firebaseConfigs
 // Please create indexes afterwards.
 const firebaseConfigs = require("../../../.firebaseConfig.json");
-
-LogBox.ignoreLogs([
-  "AsyncStorage has been extracted from react-native core and will be removed in a future release.",
-  `Key "cancelled" in the image picker result is deprecated and will be removed in SDK 48, use "canceled" instead`,
-]);
 
 class ChatGadget extends Component {
   constructor(props) {
@@ -94,13 +90,6 @@ class ChatGadget extends Component {
     // }
   };
 
-  //define title in navigation bar
-  static navigationOptions = ({ navigation }) => {
-    return {
-      title: `${navigation.state.params.userName}'s Chat`,
-    };
-  };
-
   runAppOffline = () => {
     this.getMessagesLocally();
   };
@@ -134,7 +123,13 @@ class ChatGadget extends Component {
           // Define a query
           this.firebaseQuery = query(
             this.firebaseColRef,
-            where("uid", "==", user.uid),
+            where(
+              "chatroomCode",
+              "==",
+              this.props.params.chatroomCode
+                ? this.props.params.chatroomCode
+                : "public"
+            ),
             orderBy("serverReceivedAt", "desc")
           );
           // // Subscribe a snapshot to the collection
@@ -224,6 +219,7 @@ class ChatGadget extends Component {
 
   addMessageToFirebase = () => {
     const { uid, messages } = this.state;
+    const { params } = this.props;
 
     addDoc(this.firebaseColRef, {
       _id: messages[0]._id,
@@ -234,30 +230,10 @@ class ChatGadget extends Component {
       image: messages[0].image || null,
       location: messages[0].location || null,
       uid: uid,
+      chatroomCode: params.chatroomCode || "public",
     })
       .then(async () => {
         console.log("Message sent successfully");
-
-        // Just for Demo Purposes //////////////////////////////////////
-        await addDoc(this.firebaseColRef, {
-          _id: Math.floor(Math.random() * 1000),
-          user: {
-            _id: 2,
-            name: "Robot",
-            avatar: "https://picsum.photos/id/30/140/140",
-          },
-          text: await this.robot(),
-          createdAt: new Date(),
-          serverReceivedAt: serverTimestamp(),
-          uid: uid,
-        })
-          .then(() => {
-            console.log("Automatic reply sent successfully");
-          })
-          .catch((err) => {
-            console.error(err.message);
-          });
-        ////////////////////////////////////////////////////////////////
       })
       .catch((err) => {
         console.error(err.message);
@@ -269,6 +245,7 @@ class ChatGadget extends Component {
 
     snapshot.docs.forEach((doc) => {
       const { uid } = this.state;
+      const { params } = this.props;
       const data = doc.data();
 
       messages.push({
@@ -280,6 +257,7 @@ class ChatGadget extends Component {
         image: data.image || null,
         location: data.location || null,
         uid: uid,
+        chatroomCode: params.chatroomCode || "public",
       });
     });
 
@@ -518,7 +496,7 @@ class ChatGadget extends Component {
   };
 
   render = () => {
-    const { messages } = this.state;
+    const { messages, uid } = this.state;
     const { params } = this.props;
 
     return (
@@ -532,8 +510,9 @@ class ChatGadget extends Component {
             renderBubble={this.renderBubbleHandler}
             onSend={(messages) => this.sendMessageHandler(messages)}
             user={{
-              _id: 1,
-              name: params.username && params.username,
+              _id: uid,
+              name: params.username || "anonymous",
+              avatar: avatars_default.male,
             }}
             onUploadImageToFirebase={this.uploadImageToFirebaseHandler}
           />

@@ -10,6 +10,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff80",
   },
 
+  txtWrapper: {
+    alignItems: "center",
+    textAlign: "center",
+    marginBottom: 5,
+    marginTop: 20,
+  },
+
   subContainerColors: {
     flexDirection: "row",
     backgroundColor: "#ffffff70",
@@ -36,8 +43,8 @@ const styles = StyleSheet.create({
   colorBlue: {
     backgroundColor: colors.blue,
   },
-  colorGray: {
-    backgroundColor: colors.gray,
+  colorBlack: {
+    backgroundColor: colors.black,
   },
 });
 

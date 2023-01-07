@@ -5,15 +5,25 @@ import { colors } from "../../assets/css";
 import styles from "./styles";
 
 const ColorPicker = (props) => {
-  const { onChatBgColorChange } = props;
+  const { onChatBgColorChange, textColor } = props;
 
   return (
     <View style={styles.subContainer}>
-      <Text>Select you favorite background color</Text>
-      <Text>for chatting</Text>
+      <View
+        style={styles.txtWrapper}
+        accessible={true}
+        accessibilityLabel="Select your favorite theme color"
+      >
+        <Text style={[styles.lblBold, { color: textColor }]}>
+          Select you favorite theme color
+        </Text>
+        <Text style={[styles.lblBold, { color: textColor }]}>for chatting</Text>
+      </View>
       <View style={styles.subContainerColors}>
         <Pressable
           key="colorRed"
+          accessible={true}
+          accessibilityLabel="Theme color, red!"
           style={[styles.colorCircles, styles.colorRed]}
           onPressOut={() =>
             onChatBgColorChange({
@@ -24,6 +34,8 @@ const ColorPicker = (props) => {
         ></Pressable>
         <Pressable
           key="colorGreen"
+          accessible={true}
+          accessibilityLabel="Theme color, green!"
           style={[styles.colorCircles, styles.colorGreen]}
           onPressOut={() =>
             onChatBgColorChange({
@@ -34,6 +46,8 @@ const ColorPicker = (props) => {
         ></Pressable>
         <Pressable
           key="colorWhite"
+          accessible={true}
+          accessibilityLabel="Theme color, light!"
           style={[styles.colorCircles, styles.colorWhite]}
           onPressOut={() =>
             onChatBgColorChange({
@@ -44,6 +58,8 @@ const ColorPicker = (props) => {
         ></Pressable>
         <Pressable
           key="colorBlue"
+          accessible={true}
+          accessibilityLabel="Theme color, blue!"
           style={[styles.colorCircles, styles.colorBlue]}
           onPressOut={() =>
             onChatBgColorChange({
@@ -53,12 +69,14 @@ const ColorPicker = (props) => {
           }
         ></Pressable>
         <Pressable
-          key="colorGray"
-          style={[styles.colorCircles, styles.colorGray]}
+          key="colorBlack"
+          accessible={true}
+          accessibilityLabel="Theme color, dark!"
+          style={[styles.colorCircles, styles.colorBlack]}
           onPressOut={() =>
             onChatBgColorChange({
-              name: "Gray",
-              code: colors.gray,
+              name: "Black",
+              code: colors.black,
             })
           }
         ></Pressable>

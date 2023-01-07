@@ -4,7 +4,7 @@ import { ImageBackground, View } from "react-native";
 import styles from "./styles";
 import ChatGadget from "../../components/chat-gadget";
 import GoToStartButton from "../../components/go-to-start-button";
-const image = require("../../assets/img/background_chat.png");
+const screenBgImage = require("../../assets/img/background/background_chat.png");
 
 // The application’s main Chat screen that renders the chat UI
 class Chat extends Component {
@@ -12,19 +12,19 @@ class Chat extends Component {
     super(props);
 
     // Bind the methods to the class
-    this.handleUpdateUsername = this.handleUpdateUsername.bind(this);
-    this.handleGoToStart = this.handleGoToStart.bind(this);
+    this.updateUsernameHandler = this.updateUsernameHandler.bind(this);
+    this.goToStartHandler = this.goToStartHandler.bind(this);
   }
 
   componentDidMount = () => {
-    this.handleUpdateUsername();
+    this.updateUsernameHandler();
   };
 
   componentDidUpdate = () => {
-    this.handleUpdateUsername();
+    this.updateUsernameHandler();
   };
 
-  handleUpdateUsername = () => {
+  updateUsernameHandler = () => {
     const { route, navigation } = this.props;
 
     if (route.params?.username) {
@@ -36,7 +36,7 @@ class Chat extends Component {
     }
   };
 
-  handleGoToStart = () => {
+  goToStartHandler = () => {
     const { navigation } = this.props;
     navigation.navigate("Start");
   };
@@ -48,14 +48,14 @@ class Chat extends Component {
       <View style={styles.container}>
         <ImageBackground
           style={styles.bgImage}
-          source={image}
+          source={screenBgImage}
           resizeMode="cover"
         >
           <ImageBackground style={styles.chatArea} resizeMode="cover">
             <ChatGadget params={params} />
             {params?.username && (
               <GoToStartButton
-                onGoToStart={this.handleGoToStart}
+                onGoToStart={this.goToStartHandler}
                 chatBgColor={params.chatBgColor}
               />
             )}

@@ -31,7 +31,13 @@ const GoToStartButton = (props) => {
 
   return (
     <View style={styles.btnContainer}>
-      <Pressable style={styles.btn} onPress={onGoToStart}>
+      <Pressable
+        accessible={true}
+        accessibilityLabel="button"
+        accessibilityHint="Press here to return to start page"
+        style={styles.btn}
+        onPress={onGoToStart}
+      >
         <Text style={styles.lblBold}>GO BACK</Text>
       </Pressable>
     </View>

@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, Image, TextInput } from "react-native";
+import { View, Text, TextInput } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
 
 import styles from "./styles";
 
@@ -9,14 +10,13 @@ const UsernameInput = (props) => {
 
   return (
     <View style={styles.subContainer}>
-      <Text style={styles.lblBold}>Username</Text>
+      <Text style={[styles.lblBold, { color: btnTitleColor }]}>Enter Username</Text>
       <View
         style={[styles.usernameWrapper, { borderColor: `${btnTitleColor}30` }]}
       >
-        <Image
-          style={styles.icon}
-          source={require("../../assets/img/user_24px.png")}
-        />
+        <View style={styles.icon}>
+          <FontAwesome name="user" size={24} color={btnTitleColor} />
+        </View>
         <TextInput
           style={[styles.txtInput, { backgroundColor: `${btnBgColor}20` }]}
           value={username}

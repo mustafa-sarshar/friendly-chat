@@ -7,11 +7,9 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     backgroundColor: "#ffffff80",
-    paddingVertical: 24,
-    margin: 30,
   },
 
-  usernameWrapper: {
+  chatroomCodeWrapper: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

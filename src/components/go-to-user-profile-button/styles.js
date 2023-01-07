@@ -7,27 +7,14 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     backgroundColor: "#ffffff80",
-    paddingVertical: 24,
-    margin: 30,
   },
 
-  usernameWrapper: {
+  btnWrapper: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
-    borderColor: "gray",
-    borderWidth: 1,
-    borderRadius: 5,
-  },
-
-  txtInput: {
-    height: 40,
-    padding: 10,
     width: 200,
-    fontWeight: "bold",
-    textAlign: "left",
-    backgroundColor: "#FFFFFF",
   },
 });
 
