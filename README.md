@@ -1,6 +1,6 @@
 # (musto) friendly-chat
 
-## LIVE DEMO
+## WATCH THE DEMO
 
 [YouTube]()
 
@@ -66,7 +66,8 @@ To build a chat app for mobile devices using React Native. The app will provide 
 }
 ```
 
-2. Add and enable an Index for the Collection specified in the collectionName above ( Fields indexed: uid: Ascending, serverReceivedAt: Descending)
+2. Add and enable an Index for the Collection specified in the collectionName above.
+    - Fields indexed: uid: Ascending, serverReceivedAt: Descending, \_\_name\_\_: Descending
 3. Run **npm install** in terminal from the root directory to install all necessary packages and dependencies.
 4. Run **npm start** in terminal from the root directory to run the Expo.
 5. Follow the instructions provided by the Expo.

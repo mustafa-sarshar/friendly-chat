@@ -518,7 +518,7 @@ class ChatGadget extends Component {
   };
 
   render = () => {
-    const { messages } = this.state;
+    const { messages, uid } = this.state;
     const { params } = this.props;
 
     return (
@@ -532,7 +532,7 @@ class ChatGadget extends Component {
             renderBubble={this.renderBubbleHandler}
             onSend={(messages) => this.sendMessageHandler(messages)}
             user={{
-              _id: 1,
+              _id: uid,
               name: params.username && params.username,
             }}
             onUploadImageToFirebase={this.uploadImageToFirebaseHandler}
