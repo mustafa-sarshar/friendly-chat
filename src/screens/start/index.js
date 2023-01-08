@@ -1,11 +1,12 @@
 import React, { Component } from "react";
 import { ImageBackground, View, Text, Alert } from "react-native";
 import NetInfo from "@react-native-community/netinfo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import ColorPicker from "../../components/color-picker";
 import ChatroomCodeInput from "../../components/chatroom-code-input";
-import GoToChatButton from "../../components/go-to-chat-button";
-import GoToUserProfileButton from "../../components/go-to-user-profile-button";
+import CustomButton from "../../components/custom-button";
+import UserProfileButton from "../../components/user-profile-button";
 
 import { colors } from "../../assets/css";
 import styles from "./styles";
@@ -18,18 +19,22 @@ class Start extends Component {
     super(props);
 
     this.state = {
+      isUserProfileValid: false,
       username: "",
-      userImage: avatars_default.male,
+      userAvatar: avatars_default.default,
       chatroomCode: "",
       chatBgColor: { name: "White", code: colors.white },
     };
 
     // Bind the methods to the class
     this.changeUsernameHandler = this.changeUsernameHandler.bind(this);
-    this.changeUserImageHandler = this.changeUserImageHandler.bind(this);
+    this.changeUserAvatarHandler = this.changeUserAvatarHandler.bind(this);
     this.changeChatBgColorHandler = this.changeChatBgColorHandler.bind(this);
-    this.goToChatHandler = this.goToChatHandler.bind(this);
-    this.checkNetConnection = this.checkNetConnection.bind(true);
+    this.startChatHandler = this.startChatHandler.bind(this);
+    this.checkNetConnection = this.checkNetConnection.bind(this);
+    this.setUserProfileHandler = this.setUserProfileHandler.bind(this);
+    this.resetUserProfileHandler = this.resetUserProfileHandler.bind(this);
+    this.deleteMessagesLocally = this.deleteMessagesLocally.bind(this);
   }
 
   componentDidMount = () => {
@@ -41,44 +46,45 @@ class Start extends Component {
   };
 
   changeUsernameHandler = (username) => {
-    console.log("changeUsernameHandler", username);
     this.setState({ username });
   };
 
-  changeUserImageHandler = (userImage) => {
-    console.log("Image changed", userImage);
-    this.setState({ userImage });
+  changeUserAvatarHandler = (userAvatar) => {
+    console.log("Image changed", userAvatar);
+    this.setState({ userAvatar });
   };
 
   changeChatroomCodeHandler = (chatroomCode) => {
     this.setState({ chatroomCode });
   };
 
-  changeChatBgColorHandler(color) {
+  changeChatBgColorHandler = (color) => {
     this.setState((prevState) => {
       return { ...prevState, chatBgColor: { ...color } };
     });
-  }
+  };
 
-  goToUserProfileHandler = (evt) => {
-    evt.preventDefault();
+  updateUserProfileValidationHandler = () => {
+    this.setState({
+      isUserProfileValid: true,
+    });
+  };
 
-    const { username, userImage, chatBgColor } = this.state;
+  setUserProfileHandler = () => {
+    const { username, userAvatar, chatBgColor } = this.state;
     const { navigation } = this.props;
 
     navigation.navigate("User", {
       username,
-      userImage,
+      userAvatar,
       chatBgColor,
       onChangeUsername: this.changeUsernameHandler,
-      onChangeUserImage: this.changeUserImageHandler,
+      onChangeUserAvatar: this.changeUserAvatarHandler,
     });
   };
 
-  goToChatHandler = (evt) => {
-    evt.preventDefault();
-
-    const { username, userImage, chatBgColor, chatroomCode } = this.state;
+  startChatHandler = () => {
+    const { username, userAvatar, chatBgColor, chatroomCode } = this.state;
     const { navigation } = this.props;
 
     if (username.trim().length === 0) {
@@ -86,12 +92,57 @@ class Start extends Component {
     } else if (username.trim().length < 3) {
       Alert.alert("Username must be at least 3 characters long!!!");
     } else {
-      navigation.navigate("Chat", {
-        username,
-        userImage,
-        chatBgColor,
-        chatroomCode,
-      });
+      this.setState(
+        {
+          isUserProfileValid: true,
+        },
+        () => {
+          navigation.navigate("Chat", {
+            username,
+            userAvatar,
+            chatBgColor,
+            chatroomCode,
+          });
+        }
+      );
+    }
+  };
+
+  resetUserProfileHandler = () => {
+    Alert.alert(
+      "Reset Profile",
+      "Be careful!!! If you click OK, all your profile data, and all locally saved messages will be deleted and reset.",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel",
+        },
+        {
+          text: "OK",
+          onPress: () =>
+            this.setState(
+              {
+                isUserProfileValid: false,
+                username: "",
+                userAvatar: avatars_default.default,
+                chatroomCode: "",
+                chatBgColor: { name: "White", code: colors.white },
+              },
+              async () => {
+                await this.deleteMessagesLocally();
+              }
+            ),
+        },
+      ]
+    );
+  };
+
+  deleteMessagesLocally = async () => {
+    try {
+      await AsyncStorage.removeItem("messages");
+    } catch (err) {
+      console.error(err.message);
     }
   };
 
@@ -112,7 +163,13 @@ class Start extends Component {
   };
 
   render = () => {
-    const { username, userImage, chatBgColor, chatroomCode } = this.state;
+    const {
+      isUserProfileValid,
+      username,
+      userAvatar,
+      chatBgColor,
+      chatroomCode,
+    } = this.state;
     const btnTitleColor =
       chatBgColor.name === "White" ? "#000000" : chatBgColor.code;
     const btnBgColor =
@@ -129,12 +186,26 @@ class Start extends Component {
             <Text style={[styles.lblWelcome, { color: btnTitleColor }]}>
               Welcome to Musto Friendly-Chat
             </Text>
-            <GoToUserProfileButton
-              username={username}
-              userImage={userImage}
-              colorSettings={{ chatBgColor, btnTitleColor }}
-              onGoToUserProfile={this.goToUserProfileHandler}
-            />
+
+            {!isUserProfileValid ? (
+              //  Show the Set User Profile button, only if the user profile is not set yet
+              <UserProfileButton
+                colorSettings={{ chatBgColor, btnTitleColor }}
+                onPress={this.setUserProfileHandler}
+                titleStyle={{ color: btnTitleColor }}
+                titleText="Set user profile"
+                buttonHint="Press the button to got to the user profile"
+              />
+            ) : (
+              // Show the Reset Profile button, only if the user profile is already set successfully
+              <UserProfileButton
+                colorSettings={{ chatBgColor, btnTitleColor }}
+                onPress={this.resetUserProfileHandler}
+                titleStyle={{ color: btnTitleColor }}
+                titleText="Reset user profile"
+                buttonHint="Press the button to reset the user profile"
+              />
+            )}
             <ChatroomCodeInput
               chatroomCode={chatroomCode}
               onChangeText={this.changeChatroomCodeHandler}
@@ -144,9 +215,11 @@ class Start extends Component {
               textColor={btnTitleColor}
               onChatBgColorChange={this.changeChatBgColorHandler}
             />
-            <GoToChatButton
-              onGoToChat={this.goToChatHandler}
+            <CustomButton
+              onPress={this.startChatHandler}
               colorSettings={{ btnBgColor, btnTitleColor }}
+              titleText="START CHAT"
+              buttonHint="Press the button to go to the chat room"
             />
           </View>
         </ImageBackground>

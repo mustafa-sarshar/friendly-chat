@@ -4,7 +4,7 @@ import { View, Pressable, Text } from "react-native";
 import styles from "./styles";
 
 const GoToStartButton = (props) => {
-  const { onGoToStart } = props;
+  const { onGoToStart, title } = props;
 
   const handleUpdateChatStyles = () => {
     const { chatBgColor } = props;
@@ -38,7 +38,7 @@ const GoToStartButton = (props) => {
         style={styles.btn}
         onPress={onGoToStart}
       >
-        <Text style={styles.lblBold}>GO BACK</Text>
+        <Text style={styles.lblBold}>{title ? title : "GO BACK"}</Text>
       </Pressable>
     </View>
   );

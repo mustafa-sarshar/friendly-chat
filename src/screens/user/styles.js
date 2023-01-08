@@ -11,11 +11,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  actionsWrapper: {
+  imageContainer: {
     flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "center",
+  },
+
+  actionsWrapper: {
     width: "100%",
     alignItems: "center",
     justifyContent: "flex-end",
+    backgroundColor: "#FFFFFF70",
   },
 });
 

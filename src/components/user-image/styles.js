@@ -5,22 +5,14 @@ const styles = StyleSheet.create({
   ...GLOBAL_STYLES,
   subContainer: {
     flex: 1,
+    justifyContent: "flex-start",
     alignItems: "center",
-    justifyContent: "space-between",
   },
 
   imgContainer: {
-    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
-    borderRadius: 8,
-    padding: 8,
-    marginVertical: 4,
-  },
-
-  btnWrapper: {
-    flexDirection: "row",
+    marginVertical: 8,
   },
 
   img: {
@@ -28,6 +20,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 200,
     height: 200,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+
+  btnWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

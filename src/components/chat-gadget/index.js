@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { View, KeyboardAvoidingView, Platform } from "react-native";
+import { View, KeyboardAvoidingView, Platform, Text } from "react-native";
 import { GiftedChat, Bubble, InputToolbar } from "react-native-gifted-chat";
 import MapView from "react-native-maps";
 import NetInfo from "@react-native-community/netinfo";
@@ -30,13 +30,15 @@ import {
 } from "firebase/storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import GiftedChatCustomActions from "../gifted-chat-custom-actions";
+import ChatroomName from "../chatroom-name";
 
 import styles from "./styles";
 import Robot from "../../utils/robot";
-import avatars_default from "../../assets/data/index";
+import avatarsDefault from "../../assets/data";
+import { colors } from "../../assets/css";
 
 // Assign your own firebase configurations to firebaseConfigs
-// Please create indexes afterwards.
+// Please create indexes in Firebase afterwards.
 const firebaseConfigs = require("../../../.firebaseConfig.json");
 
 class ChatGadget extends Component {
@@ -45,6 +47,8 @@ class ChatGadget extends Component {
 
     this.state = {
       uid: 0,
+      username: this.props.params.username,
+      userAvatar: this.props.params.userAvatar,
       messages: [],
       isConnected: false,
     };
@@ -53,14 +57,14 @@ class ChatGadget extends Component {
     this.runAppOffline = this.runAppOffline.bind(this);
     this.runAppOnline = this.runAppOnline.bind(this);
     this.updateChatStylesHandler = this.updateChatStylesHandler.bind(this);
-    this.renderActionsHandler = this.renderActionsHandler.bind(this);
+    this.renderCustomActionsHandler =
+      this.renderCustomActionsHandler.bind(this);
     this.renderBubbleHandler = this.renderBubbleHandler.bind(this);
     this.renderInputToolbarHandler = this.renderInputToolbarHandler.bind(this);
     this.checkNetConnection = this.checkNetConnection.bind(this);
     this.onCollectionUpdate = this.onCollectionUpdate.bind(this);
     this.getMessagesLocally = this.getMessagesLocally.bind(this);
     this.saveMessagesLocally = this.saveMessagesLocally.bind(this);
-    this.deleteMessagesLocally = this.deleteMessagesLocally.bind(this);
     this.uploadImageToFirebaseHandler =
       this.uploadImageToFirebaseHandler.bind(this);
 
@@ -120,6 +124,20 @@ class ChatGadget extends Component {
             messages: [],
           });
 
+          // Check whether the avatar is from the defaults or not
+          if (
+            Object.values(avatarsDefault).indexOf(this.state.userAvatar) < 0
+          ) {
+            console.log("Upload Avatar to Firebase");
+            await this.uploadImageToFirebaseHandler(
+              this.state.userAvatar,
+              firebaseConfigs.storageConfig.avatarsDirectory,
+              null,
+              true,
+              user.uid
+            );
+          }
+
           // Define a query
           this.firebaseQuery = query(
             this.firebaseColRef,
@@ -177,7 +195,7 @@ class ChatGadget extends Component {
         ...styles.giftedChatContainer,
         backgroundColor: `${params.chatBgColor.code}30`,
         borderWidth: 1,
-        borderRadius: 5,
+        borderRadius: 8,
         borderColor:
           params.chatBgColor.name === "White"
             ? "#00000050"
@@ -293,19 +311,14 @@ class ChatGadget extends Component {
     }
   };
 
-  deleteMessagesLocally = async () => {
-    try {
-      await AsyncStorage.removeItem("messages");
-      this.setState({
-        messages: [],
-      });
-    } catch (err) {
-      console.error(err.message);
-    }
-  };
-
   // Upload images to Firebase
-  uploadImageToFirebaseHandler = async (uri, sendHandler) => {
+  uploadImageToFirebaseHandler = async (
+    uri,
+    directoryName = "",
+    sendHandler = null,
+    updateUserAvatar = false,
+    uid = null
+  ) => {
     const blob = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
 
@@ -322,10 +335,18 @@ class ChatGadget extends Component {
     });
 
     const imageNameBefore = uri.split("/");
-    const imageName = imageNameBefore[imageNameBefore.length - 1];
+    let imageName = imageNameBefore[imageNameBefore.length - 1];
+    if (updateUserAvatar) {
+      const filenameSplits = imageName.split(".");
+      if (filenameSplits.length > 1) {
+        imageName = `${uid}.${filenameSplits[filenameSplits.length - 1]}`;
+      } else {
+        imageName = `${uid}.imagefile`;
+      }
+    }
     const storageRef = ref(
       getStorage(this.firebaseApp, firebaseConfigs.storageConfig.bucketURL),
-      `${firebaseConfigs.storageConfig.directoryName}/${imageName}`
+      `${directoryName}/${imageName}`
     );
     const uploadTask = uploadBytesResumable(storageRef, blob);
 
@@ -357,7 +378,14 @@ class ChatGadget extends Component {
         getDownloadURL(uploadTask.snapshot.ref)
           .then((downloadURL) => {
             console.log("File available at", downloadURL);
-            sendHandler([{ _id: 1, image: `${downloadURL}` }]);
+            if (sendHandler) {
+              sendHandler([{ _id: 1, image: `${downloadURL}` }]);
+            }
+            if (updateUserAvatar) {
+              this.setState({
+                userAvatar: downloadURL,
+              });
+            }
           })
           .catch((err) => {
             console.error("getDownloadURL failed:", err.message);
@@ -370,7 +398,7 @@ class ChatGadget extends Component {
   };
 
   //
-  renderActionsHandler = (props) => {
+  renderCustomActionsHandler = (props) => {
     const { params } = this.props;
     let wrapperStyle;
     let iconTextStyle;
@@ -452,11 +480,11 @@ class ChatGadget extends Component {
         wrapperStyle={{
           left: {
             ...styleWrappers,
-            backgroundColor: `${customColorBG}25`,
+            backgroundColor: `${customColorBG}55`,
           },
           right: {
             ...styleWrappers,
-            backgroundColor: `${customColorBG}50`,
+            backgroundColor: `${customColorBG}75`,
           },
         }}
         textProps={{
@@ -472,6 +500,9 @@ class ChatGadget extends Component {
           right: {
             color: customColorInner,
           },
+        }}
+        usernameStyle={{
+          color: customColorInner,
         }}
       />
     );
@@ -496,23 +527,30 @@ class ChatGadget extends Component {
   };
 
   render = () => {
-    const { messages, uid } = this.state;
+    const { messages, uid, userAvatar, username } = this.state;
     const { params } = this.props;
 
     return (
       <View style={styles.subContainer}>
+        <ChatroomName
+          chatroomName={params.chatroomCode || "public"}
+          chatBgColor={
+            params.chatBgColor || { name: "White", code: colors.white }
+          }
+        />
         <View style={styles.giftedChatContainer}>
           <GiftedChat
             messages={messages}
             renderInputToolbar={this.renderInputToolbarHandler}
-            renderActions={this.renderActionsHandler}
+            renderActions={this.renderCustomActionsHandler}
             renderCustomView={this.renderCustomView}
             renderBubble={this.renderBubbleHandler}
+            renderUsernameOnMessage={true}
             onSend={(messages) => this.sendMessageHandler(messages)}
             user={{
               _id: uid,
-              name: params.username || "anonymous",
-              avatar: avatars_default.male,
+              name: username || "anonymous",
+              avatar: userAvatar,
             }}
             onUploadImageToFirebase={this.uploadImageToFirebaseHandler}
           />

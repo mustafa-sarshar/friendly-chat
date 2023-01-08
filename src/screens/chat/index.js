@@ -3,7 +3,7 @@ import { ImageBackground, View } from "react-native";
 
 import styles from "./styles";
 import ChatGadget from "../../components/chat-gadget";
-import GoToStartButton from "../../components/go-to-start-button";
+import CustomButton from "../../components/custom-button";
 const screenBgImage = require("../../assets/img/background/background_chat.png");
 
 // The application’s main Chat screen that renders the chat UI
@@ -43,6 +43,11 @@ class Chat extends Component {
 
   render = () => {
     const { params } = this.props.route;
+    const { chatBgColor } = params;
+    const btnTitleColor =
+      chatBgColor.name === "White" ? "#000000" : chatBgColor.code;
+    const btnBgColor =
+      chatBgColor.name === "White" ? "#FFFFFF" : chatBgColor.code;
 
     return (
       <View style={styles.container}>
@@ -54,9 +59,11 @@ class Chat extends Component {
           <ImageBackground style={styles.chatArea} resizeMode="cover">
             <ChatGadget params={params} />
             {params?.username && (
-              <GoToStartButton
-                onGoToStart={this.goToStartHandler}
-                chatBgColor={params.chatBgColor}
+              <CustomButton
+                onPress={this.goToStartHandler}
+                colorSettings={{ btnBgColor, btnTitleColor }}
+                titleText="QUIT CHATROOM"
+                buttonHint="Press the button to quit the chatroom and go to the start page"
               />
             )}
           </ImageBackground>

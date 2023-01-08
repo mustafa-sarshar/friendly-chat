@@ -1,7 +1,9 @@
-const avatars_default = {
-  female:
-    "https://firebasestorage.googleapis.com/v0/b/friendly-chat-7cfcd.appspot.com/o/avatars%2FuserImage_default_female.png?alt=media&token=73b1e1a7-f6d1-46b8-a7f8-649743f57ec3",
-  male: "https://firebasestorage.googleapis.com/v0/b/friendly-chat-7cfcd.appspot.com/o/avatars%2FuserImage_default_male.png?alt=media&token=c7e7a453-cea1-4696-8512-38fb76060332",
+const firebaseConfigs = require("../../../.firebaseConfig.json");
+
+const avatarsDefault = {
+  female: `https://firebasestorage.googleapis.com/v0/b/${firebaseConfigs.appConfig.storageBucket}/o/avatars%2Favatar_female.png?alt=media&token=5b7ac7a3-c300-4cc0-9a45-27f1e5c13584`,
+  male: `https://firebasestorage.googleapis.com/v0/b/${firebaseConfigs.appConfig.storageBucket}/o/avatars%2Favatar_male.png?alt=media&token=07700d51-a4ac-4a06-ad2d-de0007f28546`,
+  default: `https://firebasestorage.googleapis.com/v0/b/${firebaseConfigs.appConfig.storageBucket}/o/avatars%2Favatar_default.png?alt=media&token=6a892810-cd29-401d-857e-293c9d068219`,
 };
 
-export default avatars_default;
+export default avatarsDefault;

@@ -9,8 +9,10 @@ const UsernameInput = (props) => {
   const { btnBgColor, btnTitleColor } = colorSettings;
 
   return (
-    <View style={styles.subContainer}>
-      <Text style={[styles.lblBold, { color: btnTitleColor }]}>Enter Username</Text>
+    <View style={[styles.subContainer, { backgroundColor: `${btnBgColor}10` }]}>
+      <Text style={[styles.lblBold, styles.txtTitle, { color: btnTitleColor }]}>
+        Enter Username
+      </Text>
       <View
         style={[styles.usernameWrapper, { borderColor: `${btnTitleColor}30` }]}
       >
@@ -18,7 +20,7 @@ const UsernameInput = (props) => {
           <FontAwesome name="user" size={24} color={btnTitleColor} />
         </View>
         <TextInput
-          style={[styles.txtInput, { backgroundColor: `${btnBgColor}20` }]}
+          style={[styles.txtInput, { color: btnTitleColor }]}
           value={username}
           placeholder="enter your username please"
           onChangeText={onTextChange}

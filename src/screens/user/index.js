@@ -1,16 +1,12 @@
 import React, { Component } from "react";
-import { ImageBackground, View, Image, Text, Alert } from "react-native";
+import { ImageBackground, View, Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { FontAwesome } from "@expo/vector-icons";
-import NetInfo from "@react-native-community/netinfo";
 
-import UserImage from "../../components/user-image";
+import UserAvatar from "../../components/user-image";
 import UsernameInput from "../../components/username-input";
-import GoToStartButton from "../../components/go-to-start-button";
+import CustomButton from "../../components/custom-button";
 
-import { colors } from "../../assets/css";
 import styles from "./styles";
-import avatars_default from "../../assets/data";
 
 const screenBgImage = require("../../assets/img/background/background_user.png");
 
@@ -22,19 +18,15 @@ class User extends Component {
     this.state = {
       username: props.route.params.username,
       chatBgColor: props.route.params.chatBgColor,
-      userImage: props.route.params.userImage,
+      userAvatar: props.route.params.userAvatar,
     };
-    console.log("const");
 
     // Bind the methods to the class
     this.goToStartHandler = this.goToStartHandler.bind(this);
     this.pickImageHandler = this.pickImageHandler.bind(this);
     this.takePhotoHandler = this.takePhotoHandler.bind(this);
+    this.pickAvatarHandler = this.pickAvatarHandler.bind(this);
   }
-
-  componentDidMount = () => {
-    console.log("User componentDidMount");
-  };
 
   goToStartHandler = () => {
     const { username } = this.state;
@@ -63,7 +55,7 @@ class User extends Component {
   };
 
   pickImageHandler = async () => {
-    const { onChangeUserImage } = this.props.route.params;
+    const { onChangeUserAvatar } = this.props.route.params;
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     try {
@@ -76,8 +68,8 @@ class User extends Component {
         }).catch((err) => console.error(err));
 
         if (!result.canceled) {
-          this.setState({ userImage: result.assets[0].uri }, () => {
-            onChangeUserImage(result.assets[0].uri);
+          this.setState({ userAvatar: result.assets[0].uri }, () => {
+            onChangeUserAvatar(result.assets[0].uri);
           });
         }
       }
@@ -87,7 +79,7 @@ class User extends Component {
   };
 
   takePhotoHandler = async () => {
-    const { onChangeUserImage } = this.props.route.params;
+    const { onChangeUserAvatar } = this.props.route.params;
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
 
     try {
@@ -98,8 +90,8 @@ class User extends Component {
         }).catch((err) => console.error(err));
 
         if (!result.canceled) {
-          this.setState({ userImage: result.assets[0].uri }, () => {
-            onChangeUserImage(result.assets[0].uri);
+          this.setState({ userAvatar: result.assets[0].uri }, () => {
+            onChangeUserAvatar(result.assets[0].uri);
           });
         }
       }
@@ -108,14 +100,20 @@ class User extends Component {
     }
   };
 
+  pickAvatarHandler = async (avatarUri) => {
+    const { onChangeUserAvatar } = this.props.route.params;
+
+    this.setState({ userAvatar: avatarUri }, () => {
+      onChangeUserAvatar(avatarUri);
+    });
+  };
+
   render = () => {
-    const { username, userImage, chatBgColor } = this.state;
+    const { username, userAvatar, chatBgColor } = this.state;
     const btnTitleColor =
       chatBgColor.name === "White" ? "#000000" : chatBgColor.code;
     const btnBgColor =
       chatBgColor.name === "White" ? "#FFFFFF" : chatBgColor.code;
-
-    console.log("userImage", userImage);
 
     return (
       <View style={styles.container}>
@@ -125,12 +123,13 @@ class User extends Component {
           resizeMode="cover"
         >
           <View style={styles.subContainer}>
-            <View style={styles.subContainer}>
-              <UserImage
-                btnTitleColor={btnTitleColor}
-                userImage={userImage}
+            <View style={styles.imageContainer}>
+              <UserAvatar
+                colorSettings={{ btnBgColor, btnTitleColor }}
+                userAvatar={userAvatar}
                 onPressPickImage={this.pickImageHandler}
                 onPressTakePhoto={this.takePhotoHandler}
+                onPressPickAvatar={this.pickAvatarHandler}
               />
             </View>
             <View style={styles.actionsWrapper}>
@@ -139,9 +138,11 @@ class User extends Component {
                 onTextChange={this.changeTextHandler}
                 colorSettings={{ btnBgColor, btnTitleColor }}
               />
-              <GoToStartButton
-                onGoToStart={this.goToStartHandler}
-                chatBgColor={chatBgColor}
+              <CustomButton
+                onPress={this.goToStartHandler}
+                colorSettings={{ btnBgColor, btnTitleColor }}
+                titleText="SET CHANGES"
+                buttonHint="Press the button set changes and go to the start page"
               />
             </View>
           </View>

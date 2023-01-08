@@ -9,6 +9,10 @@ import * as Location from "expo-location";
 import { colors } from "../../assets/css";
 import styles from "./styles";
 
+// Assign your own firebase configurations to firebaseConfigs
+// Please create indexes in Firebase afterwards.
+const firebaseConfigs = require("../../../.firebaseConfig.json");
+
 class GiftedChatCustomActions extends Component {
   constructor(props) {
     super(props);
@@ -32,7 +36,11 @@ class GiftedChatCustomActions extends Component {
         }).catch((err) => console.error(err));
 
         if (!result.canceled) {
-          onUploadImageToFirebase(result.assets[0].uri, onSend);
+          onUploadImageToFirebase(
+            result.assets[0].uri,
+            firebaseConfigs.storageConfig.imagesDirectory,
+            onSend
+          );
         }
       }
     } catch (err) {
@@ -51,7 +59,11 @@ class GiftedChatCustomActions extends Component {
         }).catch((err) => console.error(err));
 
         if (!result.canceled) {
-          onUploadImageToFirebase(result.assets[0].uri, onSend);
+          onUploadImageToFirebase(
+            result.assets[0].uri,
+            firebaseConfigs.storageConfig.imagesDirectory,
+            onSend
+          );
         }
       }
     } catch (err) {

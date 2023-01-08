@@ -27,24 +27,7 @@ const GLOBAL_STYLES = StyleSheet.create({
   lblBold: {
     fontWeight: "bold",
     textAlign: "center",
-  },
-
-  btnContainer: {
-    width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-  },
-
-  btn: {
-    margin: 10,
-    borderRadius: 5,
-    padding: 10,
-    borderWidth: 1,
-    outlineWidth: 0,
-    backgroundColor: "#FFFFFF",
-    textAlign: "center",
-  },
+  }, 
 
   icon: {
     margin: 5,

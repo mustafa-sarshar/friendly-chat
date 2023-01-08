@@ -1,6 +1,6 @@
 # (musto) friendly-chat
 
-## LIVE DEMO
+## WATCH THE DEMO
 
 [YouTube]()
 
@@ -61,13 +61,14 @@ To build a chat app for mobile devices using React Native. The app will provide 
   },
   "storageConfig": {
     "bucketURL": "YOUR_FIREBASE_STORAGE_BUCKET_URL_FOR_IMAGES",
-    "directoryName": "YOUR_FIREBASE_STORAGE_DIRECTORY_NAME_FOR_IMAGES"
+    "imageDirectory": "YOUR_FIREBASE_STORAGE_DIRECTORY_NAME_FOR_IMAGES",
+    "avatarsDirectory": "YOUR_FIREBASE_STORAGE_DIRECTORY_NAME_FOR_AVATARS"
   }
 }
 ```
 
 2. Add and enable an Index for the Collection specified in the collectionName above.
-   - Fields indexed: 	chatroomCode: Ascending, serverReceivedAt: Descending, \_\_name\_\_: Descending
+   - Fields indexed: chatroomCode: Ascending, serverReceivedAt: Descending, \_\_name\_\_: Descending
 3. Run **npm install** in terminal from the root directory to install all necessary packages and dependencies.
 4. Run **npm start** in terminal from the root directory to run the Expo.
 5. Follow the instructions provided by the Expo.
@@ -77,7 +78,7 @@ To build a chat app for mobile devices using React Native. The app will provide 
 
 ### Icons were downloaded from:
 
-- [Avatar Icon](https://iconscout.com/icons/avatar), created by [Dmitriy Bondarchuk](https://iconscout.com/contributors/dmitriy-bondarchuk)
+- [Avatar Icon](https://undraw.co/illustrations), created by [Katerina Limpitsouni](https://twitter.com/ninaLimpi)
 
 ### Background images were downloaded from:
 
