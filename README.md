@@ -27,8 +27,9 @@ To build a chat app for mobile devices using React Native. The app will provide 
 
 ## KEY FEATURES
 
-- A page where users can enter their name and choose a background color for the chat screen before joining the chat.
-- A page displaying the conversation, as well as an input field and submit button.
+- A welcome page where users can select to set/reset their profile and messages, as well as entered their desired chatroom code, and choose a background color for the chat screen before joining the chat.
+- A profile page where users can enter their username, select, pick from library, or take a photo for their user avatar and choose a background color for their profile.
+- A page displaying the conversation, chatroom code, as well as an input field and submit button.
 - The chat must provide users with two additional communication features: sending images and location data.
 - Data gets stored online and offline.
 
@@ -66,14 +67,25 @@ To build a chat app for mobile devices using React Native. The app will provide 
   }
 }
 ```
-2. 
-2. Add and enable an Index for the Collection specified in the collectionName above.
-   - Fields indexed: chatroomCode: Ascending, serverReceivedAt: Descending, \_\_name\_\_: Descending
-3. 
-3. Run **npm install** in terminal from the root directory to install all necessary packages and dependencies.
-4. Run **npm start** in terminal from the root directory to run the Expo.
-5. Follow the instructions provided by the Expo.
-6. Enjoy it.
+
+2. Add and enable two Indexes for the Collection specified in the collectionName above.
+   1. Fields indexed:
+      - chatroomCode: Ascending
+      - serverReceivedAt: Descending
+      - \_\_name\_\_: Descending
+   2. Fields indexed:
+      - uid: Ascending
+      - serverReceivedAt: Descending
+      - \_\_name\_\_: Descending
+3. Add (create) two folders in the Firebase Storage, one for the images, and one for the user avatars.
+
+- e.g. 1) images, 2) avatars
+
+4. Upload the three default avatars, provided in the src/assets/img/avatars folder, to the Firebase Storage, created for avatars.
+5. Run **npm install** in terminal from the root directory to install all necessary packages and dependencies.
+6. Run **npm start** in terminal from the root directory to run the Expo.
+7. Follow the instructions provided by the Expo.
+8. Enjoy it.
 
 ## COPY RIGHTS
 
