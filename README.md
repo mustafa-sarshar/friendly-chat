@@ -37,10 +37,10 @@ To build a chat app for mobile devices using React Native. The app will provide 
 
 ### TECHNOLOGIES USED
 
-- React-Native
-- React-Native-Gifted-Chat
-- Expo
-- Firebase
+- [React-Native](https://reactnative.dev/)
+- [React-Native-Gifted-Chat](https://github.com/FaridSafi/react-native-gifted-chat)
+- [Expo](https://expo.dev/)
+- [Firebase](https://firebase.google.com/)
 
 ### HOW TO USE
 
@@ -79,7 +79,7 @@ To build a chat app for mobile devices using React Native. The app will provide 
       - \_\_name\_\_: Descending
 3. Add (create) two folders in the Firebase Storage, one for the images, and one for the user avatars.
 
-- e.g. 1) images, 2) avatars
+   - e.g. 1) images, 2) avatars
 
 4. Upload the three default avatars, provided in the src/assets/img/avatars folder, to the Firebase Storage, created for avatars.
 5. Run **npm install** in terminal from the root directory to install all necessary packages and dependencies.
