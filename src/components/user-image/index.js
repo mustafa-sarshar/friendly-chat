@@ -4,8 +4,8 @@ import { View, Image, Text } from "react-native";
 import CustomButton from "../custom-button";
 import AvatarButton from "../avatar-button";
 
+import { AVATARS_DEFAULT } from "../../assets/data";
 import styles from "./styles";
-import avatarsDefault from "../../assets/data";
 
 class UserAvatar extends Component {
   constructor(props) {
@@ -60,25 +60,25 @@ class UserAvatar extends Component {
         <View style={styles.btnWrapper}>
           <View>
             <AvatarButton
-              onPress={() => onPressPickAvatar(avatarsDefault.male)}
+              onPress={() => onPressPickAvatar(AVATARS_DEFAULT.male)}
               colorSettings={{ btnBgColor, btnTitleColor }}
-              imageUri={avatarsDefault.male}
+              imageUri={AVATARS_DEFAULT.male}
               buttonHint="Set profile photo male avatar"
             />
           </View>
           <View>
             <AvatarButton
-              onPress={() => onPressPickAvatar(avatarsDefault.default)}
+              onPress={() => onPressPickAvatar(AVATARS_DEFAULT.default)}
               colorSettings={{ btnBgColor, btnTitleColor }}
-              imageUri={avatarsDefault.default}
+              imageUri={AVATARS_DEFAULT.default}
               buttonHint="Set profile photo default avatar"
             />
           </View>
           <View>
             <AvatarButton
-              onPress={() => onPressPickAvatar(avatarsDefault.female)}
+              onPress={() => onPressPickAvatar(AVATARS_DEFAULT.female)}
               colorSettings={{ btnBgColor, btnTitleColor }}
-              imageUri={avatarsDefault.female}
+              imageUri={AVATARS_DEFAULT.female}
               buttonHint="Set profile photo female avatar"
             />
           </View>

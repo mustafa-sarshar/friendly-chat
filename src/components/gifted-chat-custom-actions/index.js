@@ -6,12 +6,10 @@ import { View, Text, TouchableOpacity } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 
+import { FIREBASE_CONFIGS } from "../../assets/data";
 import { colors } from "../../assets/css";
 import styles from "./styles";
 
-// Assign your own firebase configurations to firebaseConfigs
-// Please create indexes in Firebase afterwards.
-const firebaseConfigs = require("../../../.firebaseConfig.json");
 
 class GiftedChatCustomActions extends Component {
   constructor(props) {
@@ -38,7 +36,7 @@ class GiftedChatCustomActions extends Component {
         if (!result.canceled) {
           onUploadImageToFirebase(
             result.assets[0].uri,
-            firebaseConfigs.storageConfig.imagesDirectory,
+            FIREBASE_CONFIGS.storageConfig.imagesDirectory,
             onSend
           );
         }
@@ -61,7 +59,7 @@ class GiftedChatCustomActions extends Component {
         if (!result.canceled) {
           onUploadImageToFirebase(
             result.assets[0].uri,
-            firebaseConfigs.storageConfig.imagesDirectory,
+            FIREBASE_CONFIGS.storageConfig.imagesDirectory,
             onSend
           );
         }

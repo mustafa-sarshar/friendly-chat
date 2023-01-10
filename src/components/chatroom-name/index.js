@@ -12,7 +12,6 @@ const ChatroomName = (props) => {
     txtColor = "#FFFFFF";
   }
 
-  console.log(chatBgColor);
   return (
     <View
       style={[

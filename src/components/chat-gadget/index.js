@@ -32,21 +32,22 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import GiftedChatCustomActions from "../gifted-chat-custom-actions";
 import ChatroomName from "../chatroom-name";
 
+import {
+  FIREBASE_CONFIGS,
+  LOCAL_STORAGE_DATA_ITEM_NAME,
+  LOCAL_STORAGE_UID_ITEM_NAME,
+  AVATARS_DEFAULT,
+} from "../../assets/data";
 import styles from "./styles";
 import Robot from "../../utils/robot";
-import avatarsDefault from "../../assets/data";
 import { colors } from "../../assets/css";
-
-// Assign your own firebase configurations to firebaseConfigs
-// Please create indexes in Firebase afterwards.
-const firebaseConfigs = require("../../../.firebaseConfig.json");
 
 class ChatGadget extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      uid: 0,
+      uid: this.props.params.uid,
       username: this.props.params.username,
       userAvatar: this.props.params.userAvatar,
       messages: [],
@@ -69,7 +70,7 @@ class ChatGadget extends Component {
       this.uploadImageToFirebaseHandler.bind(this);
 
     // Init the firebase app
-    this.firebaseApp = initializeApp(firebaseConfigs.appConfig);
+    this.firebaseApp = initializeApp(FIREBASE_CONFIGS.appConfig);
     this.firebaseColRef = undefined;
     // Get the database
     this.firebaseStore = getFirestore(this.firebaseApp);
@@ -102,7 +103,7 @@ class ChatGadget extends Component {
     // Set a Collection Ref
     this.firebaseColRef = collection(
       this.firebaseStore,
-      firebaseConfigs.dbConfig.collectionName
+      FIREBASE_CONFIGS.dbConfig.collectionName
     );
     // Get Authentication
     this.firebaseAuth = getAuth(this.firebaseApp);
@@ -119,19 +120,24 @@ class ChatGadget extends Component {
             });
         } else {
           console.log("currentUser", user.uid);
-          this.setState({
-            uid: user.uid,
-            messages: [],
-          });
+          this.setState(
+            {
+              uid: user.uid,
+              messages: [],
+            },
+            async () => {
+              await AsyncStorage.setItem(LOCAL_STORAGE_UID_ITEM_NAME, user.uid);
+            }
+          );
 
           // Check whether the avatar is from the defaults or not
           if (
-            Object.values(avatarsDefault).indexOf(this.state.userAvatar) < 0
+            Object.values(AVATARS_DEFAULT).indexOf(this.state.userAvatar) < 0
           ) {
             console.log("Upload Avatar to Firebase");
             await this.uploadImageToFirebaseHandler(
               this.state.userAvatar,
-              firebaseConfigs.storageConfig.avatarsDirectory,
+              FIREBASE_CONFIGS.storageConfig.avatarsDirectory,
               null,
               true,
               user.uid
@@ -250,7 +256,7 @@ class ChatGadget extends Component {
       uid: uid,
       chatroomCode: params.chatroomCode || "public",
     })
-      .then(async () => {
+      .then(() => {
         console.log("Message sent successfully");
       })
       .catch((err) => {
@@ -290,12 +296,38 @@ class ChatGadget extends Component {
   };
 
   getMessagesLocally = async () => {
-    let messages = "";
     try {
-      messages = (await AsyncStorage.getItem("messages")) || [];
-      this.setState({
-        messages: JSON.parse(messages),
-      });
+      const uid = await AsyncStorage.getItem(LOCAL_STORAGE_UID_ITEM_NAME);
+      this.setState(
+        {
+          uid: uid || "",
+        },
+        async () => {
+          try {
+            let data = await AsyncStorage.getItem(LOCAL_STORAGE_DATA_ITEM_NAME);
+            if (data) {
+              data = JSON.parse(data);
+              if (Object.keys(data).length > 0) {
+                const chatroomCode = this.props.params.chatroomCode || "public";
+                this.setState(
+                  {
+                    messages: data[chatroomCode] || [],
+                  },
+                  () => {
+                    console.log("Messages state", this.state.messages);
+                  }
+                );
+              }
+            } else {
+              this.setState({
+                messages: [],
+              });
+            }
+          } catch (err) {
+            console.error(err.message);
+          }
+        }
+      );
     } catch (err) {
       console.error(err.message);
     }
@@ -304,8 +336,18 @@ class ChatGadget extends Component {
   saveMessagesLocally = async () => {
     try {
       const { messages } = this.state;
-      await AsyncStorage.setItem("messages", JSON.stringify(messages));
-      console.log(`Messages saved in AsyncStorage. length: ${messages.length}`);
+      const chatroomCode = this.props.params.chatroomCode || "public";
+      let curData = JSON.parse(
+        (await AsyncStorage.getItem(LOCAL_STORAGE_DATA_ITEM_NAME)) || "{}"
+      );
+      curData[chatroomCode] = messages;
+      await AsyncStorage.setItem(
+        LOCAL_STORAGE_DATA_ITEM_NAME,
+        JSON.stringify(curData)
+      );
+      console.log(
+        `Data saved in AsyncStorage @Chatroom: ${chatroomCode}, length: ${messages.length}`
+      );
     } catch (err) {
       console.error(err.message);
     }
@@ -345,7 +387,7 @@ class ChatGadget extends Component {
       }
     }
     const storageRef = ref(
-      getStorage(this.firebaseApp, firebaseConfigs.storageConfig.bucketURL),
+      getStorage(this.firebaseApp, FIREBASE_CONFIGS.storageConfig.bucketURL),
       `${directoryName}/${imageName}`
     );
     const uploadTask = uploadBytesResumable(storageRef, blob);
@@ -397,7 +439,7 @@ class ChatGadget extends Component {
     );
   };
 
-  //
+  // Change colors based on the user's selected theme color
   renderCustomActionsHandler = (props) => {
     const { params } = this.props;
     let wrapperStyle;
@@ -426,6 +468,7 @@ class ChatGadget extends Component {
     );
   };
 
+  // Customize the View for sending GeoLocation
   renderCustomView = (props) => {
     const { currentMessage } = props;
 

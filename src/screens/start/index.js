@@ -8,10 +8,14 @@ import ChatroomCodeInput from "../../components/chatroom-code-input";
 import CustomButton from "../../components/custom-button";
 import UserProfileButton from "../../components/user-profile-button";
 
+import {
+  AVATARS_DEFAULT,
+  LOCAL_STORAGE_DATA_ITEM_NAME,
+  LOCAL_STORAGE_UID_ITEM_NAME,
+} from "../../assets/data";
 import { colors } from "../../assets/css";
 import styles from "./styles";
 const screenBgImage = require("../../assets/img/background/background_start.png");
-import avatars_default from "../../assets/data";
 
 // The application’s Start screen that renders the username input box
 class Start extends Component {
@@ -21,7 +25,7 @@ class Start extends Component {
     this.state = {
       isUserProfileValid: false,
       username: "",
-      userAvatar: avatars_default.default,
+      userAvatar: AVATARS_DEFAULT.default,
       chatroomCode: "",
       chatBgColor: { name: "White", code: colors.white },
     };
@@ -125,7 +129,7 @@ class Start extends Component {
               {
                 isUserProfileValid: false,
                 username: "",
-                userAvatar: avatars_default.default,
+                userAvatar: AVATARS_DEFAULT.default,
                 chatroomCode: "",
                 chatBgColor: { name: "White", code: colors.white },
               },
@@ -140,7 +144,8 @@ class Start extends Component {
 
   deleteMessagesLocally = async () => {
     try {
-      await AsyncStorage.removeItem("messages");
+      await AsyncStorage.removeItem(LOCAL_STORAGE_DATA_ITEM_NAME);
+      await AsyncStorage.removeItem(LOCAL_STORAGE_UID_ITEM_NAME);
     } catch (err) {
       console.error(err.message);
     }
