@@ -10,6 +10,7 @@ import Start from "./src/screens/start";
 import User from "./src/screens/user";
 import Chat from "./src/screens/chat";
 import Stack from "./src/components/stack";
+import MessagesContextProvider from "./src/store/context/messages";
 
 LogBox.ignoreLogs([
   "AsyncStorage has been extracted from react-native core and will be removed in a future release.",
@@ -21,14 +22,16 @@ LogBox.ignoreLogs([
 class App extends Component {
   render = () => {
     return (
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="Start">
-          <Stack.Screen name="Start" component={Start} />
-          <Stack.Screen name="User" component={User} />
-          <Stack.Screen name="Chat" component={Chat} />
-        </Stack.Navigator>
-        <StatusBar style="auto" />
-      </NavigationContainer>
+      <MessagesContextProvider>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName="Start">
+            <Stack.Screen name="Start" component={Start} />
+            <Stack.Screen name="User" component={User} />
+            <Stack.Screen name="Chat" component={Chat} />
+          </Stack.Navigator>
+          <StatusBar style="auto" />
+        </NavigationContainer>
+      </MessagesContextProvider>
     );
   };
 }

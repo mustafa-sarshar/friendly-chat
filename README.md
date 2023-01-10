@@ -1,4 +1,4 @@
-# (musto) friendly-chat
+# (musto) friendly-chat (still under construction)
 
 ## WATCH THE DEMO
 

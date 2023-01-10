@@ -36,12 +36,14 @@ import styles from "./styles";
 import Robot from "../../utils/robot";
 import avatarsDefault from "../../assets/data";
 import { colors } from "../../assets/css";
+import { MessagesContext } from "../../store/context/messages";
 
 // Assign your own firebase configurations to firebaseConfigs
 // Please create indexes in Firebase afterwards.
 const firebaseConfigs = require("../../../.firebaseConfig.json");
 
 class ChatGadget extends Component {
+  static contextType = MessagesContext;
   constructor(props) {
     super(props);
 
