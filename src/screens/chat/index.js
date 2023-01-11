@@ -3,8 +3,8 @@ import { ImageBackground, View } from "react-native";
 
 import styles from "./styles";
 import ChatGadget from "../../components/chat-gadget";
-import GoToStartButton from "../../components/go-to-start-button";
-const image = require("../../assets/img/background_chat.png");
+import CustomButton from "../../components/custom-button";
+const screenBgImage = require("../../assets/img/background/background_chat.png");
 
 // The application’s main Chat screen that renders the chat UI
 class Chat extends Component {
@@ -12,19 +12,19 @@ class Chat extends Component {
     super(props);
 
     // Bind the methods to the class
-    this.handleUpdateUsername = this.handleUpdateUsername.bind(this);
-    this.handleGoToStart = this.handleGoToStart.bind(this);
+    this.updateUsernameHandler = this.updateUsernameHandler.bind(this);
+    this.goToStartHandler = this.goToStartHandler.bind(this);
   }
 
-  componentDidMount() {
-    this.handleUpdateUsername();
-  }
+  componentDidMount = () => {
+    this.updateUsernameHandler();
+  };
 
-  componentDidUpdate() {
-    this.handleUpdateUsername();
-  }
+  componentDidUpdate = () => {
+    this.updateUsernameHandler();
+  };
 
-  handleUpdateUsername() {
+  updateUsernameHandler = () => {
     const { route, navigation } = this.props;
 
     if (route.params?.username) {
@@ -34,36 +34,43 @@ class Chat extends Component {
     } else {
       navigation.setOptions({ title: "Please login first" });
     }
-  }
+  };
 
-  handleGoToStart() {
+  goToStartHandler = () => {
     const { navigation } = this.props;
     navigation.navigate("Start");
-  }
+  };
 
-  render() {
+  render = () => {
     const { params } = this.props.route;
+    const { chatBgColor } = params;
+    const btnTitleColor =
+      chatBgColor.name === "White" ? "#000000" : chatBgColor.code;
+    const btnBgColor =
+      chatBgColor.name === "White" ? "#FFFFFF" : chatBgColor.code;
 
     return (
       <View style={styles.container}>
         <ImageBackground
           style={styles.bgImage}
-          source={image}
+          source={screenBgImage}
           resizeMode="cover"
         >
           <ImageBackground style={styles.chatArea} resizeMode="cover">
             <ChatGadget params={params} />
             {params?.username && (
-              <GoToStartButton
-                onGoToStart={this.handleGoToStart}
-                chatBgColor={params.chatBgColor}
+              <CustomButton
+                onPress={this.goToStartHandler}
+                colorSettings={{ btnBgColor, btnTitleColor }}
+                titleText="QUIT CHATROOM"
+                buttonHint="Press the button to quit the chatroom and go to the start page"
               />
             )}
           </ImageBackground>
         </ImageBackground>
       </View>
     );
-  }
+  };
 }
 
 export default Chat;

@@ -6,26 +6,17 @@ const styles = StyleSheet.create({
   subContainer: {
     width: "100%",
     alignItems: "center",
-    backgroundColor: "#ffffff50",
-    paddingVertical: 24,
-    margin: 30,
+    backgroundColor: "#ffffff80",
   },
 
-  txtTitle: {
-    marginTop: 8,
-    paddingTop: 4,
-    paddingHorizontal: 16,
-    backgroundColor: "#FFFFFF",
-  },
-
-  usernameWrapper: {
+  chatroomCodeWrapper: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 20,
     borderColor: "gray",
     borderWidth: 1,
     borderRadius: 5,
-    backgroundColor: "#FFFFFF"
   },
 
   txtInput: {

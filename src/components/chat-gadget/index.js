@@ -1,6 +1,8 @@
 import React, { Component } from "react";
-import { View, KeyboardAvoidingView, Platform, LogBox } from "react-native";
+import { View, KeyboardAvoidingView, Platform, Text } from "react-native";
 import { GiftedChat, Bubble, InputToolbar } from "react-native-gifted-chat";
+import MapView from "react-native-maps";
+import NetInfo from "@react-native-community/netinfo";
 
 import { initializeApp } from "firebase/app";
 import {
@@ -20,27 +22,34 @@ import {
   signOut,
   deleteUser,
 } from "firebase/auth";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import NetInfo from "@react-native-community/netinfo";
+import GiftedChatCustomActions from "../gifted-chat-custom-actions";
+import ChatroomName from "../chatroom-name";
 
+import {
+  FIREBASE_CONFIGS,
+  LOCAL_STORAGE_DATA_ITEM_NAME,
+  LOCAL_STORAGE_UID_ITEM_NAME,
+  AVATARS_DEFAULT,
+} from "../../assets/data";
 import styles from "./styles";
 import Robot from "../../utils/robot";
-
-// Assign your own firebase configurations to firebaseConfigs
-// Please create indexes afterwards.
-const firebaseConfig = require("../../../.firebaseConfig.json");
-const COLLECTION_NAME = "Messages";
-
-LogBox.ignoreLogs([
-  "AsyncStorage has been extracted from react-native core and will be removed in a future release.",
-]);
+import { colors } from "../../assets/css";
 
 class ChatGadget extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      uid: 0,
+      uid: this.props.params.uid,
+      username: this.props.params.username,
+      userAvatar: this.props.params.userAvatar,
       messages: [],
       isConnected: false,
     };
@@ -48,17 +57,20 @@ class ChatGadget extends Component {
     // Bind the methods to the class
     this.runAppOffline = this.runAppOffline.bind(this);
     this.runAppOnline = this.runAppOnline.bind(this);
-    this.handleUpdateChatStyles = this.handleUpdateChatStyles.bind(this);
-    this.renderBubble = this.renderBubble.bind(this);
-    this.renderInputToolbar = this.renderInputToolbar.bind(this);
+    this.updateChatStylesHandler = this.updateChatStylesHandler.bind(this);
+    this.renderCustomActionsHandler =
+      this.renderCustomActionsHandler.bind(this);
+    this.renderBubbleHandler = this.renderBubbleHandler.bind(this);
+    this.renderInputToolbarHandler = this.renderInputToolbarHandler.bind(this);
     this.checkNetConnection = this.checkNetConnection.bind(this);
     this.onCollectionUpdate = this.onCollectionUpdate.bind(this);
     this.getMessagesLocally = this.getMessagesLocally.bind(this);
     this.saveMessagesLocally = this.saveMessagesLocally.bind(this);
-    this.deleteMessagesLocally = this.deleteMessagesLocally.bind(this);
+    this.uploadImageToFirebaseHandler =
+      this.uploadImageToFirebaseHandler.bind(this);
 
     // Init the firebase app
-    this.firebaseApp = initializeApp(firebaseConfig);
+    this.firebaseApp = initializeApp(FIREBASE_CONFIGS.appConfig);
     this.firebaseColRef = undefined;
     // Get the database
     this.firebaseStore = getFirestore(this.firebaseApp);
@@ -66,32 +78,33 @@ class ChatGadget extends Component {
     this.robot = Robot();
   }
 
-  componentDidMount() {
+  componentDidMount = () => {
     // Check the internet connection
     this.checkNetConnection();
-
     // Update chat background color
-    this.handleUpdateChatStyles();
-  }
+    this.updateChatStylesHandler();
+  };
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     if (this.unsubscribeSnapshots) {
       this.unsubscribeSnapshots();
     }
-  }
+    // Uncomment it, if you wish to unsubscribe the user each time the user returns to the start screen
+    // if (this.unsubscribeAuth) {
+    //   this.unsubscribeAuth();
+    // }
+  };
 
-  componentDidUpdate() {
-    // this.handleUpdateChatStyles();
-    // this.checkNetConnection();
-  }
-
-  runAppOffline() {
+  runAppOffline = () => {
     this.getMessagesLocally();
-  }
+  };
 
-  runAppOnline() {
+  runAppOnline = () => {
     // Set a Collection Ref
-    this.firebaseColRef = collection(this.firebaseStore, COLLECTION_NAME);
+    this.firebaseColRef = collection(
+      this.firebaseStore,
+      FIREBASE_CONFIGS.dbConfig.collectionName
+    );
     // Get Authentication
     this.firebaseAuth = getAuth(this.firebaseApp);
     this.unsubscribeAuth = onAuthStateChanged(
@@ -107,17 +120,43 @@ class ChatGadget extends Component {
             });
         } else {
           console.log("currentUser", user.uid);
-          this.setState({
-            uid: user.uid,
-          });
+          this.setState(
+            {
+              uid: user.uid,
+              messages: [],
+            },
+            async () => {
+              await AsyncStorage.setItem(LOCAL_STORAGE_UID_ITEM_NAME, user.uid);
+            }
+          );
+
+          // Check whether the avatar is from the defaults or not
+          if (
+            Object.values(AVATARS_DEFAULT).indexOf(this.state.userAvatar) < 0
+          ) {
+            console.log("Upload Avatar to Firebase");
+            await this.uploadImageToFirebaseHandler(
+              this.state.userAvatar,
+              FIREBASE_CONFIGS.storageConfig.avatarsDirectory,
+              null,
+              true,
+              user.uid
+            );
+          }
 
           // Define a query
           this.firebaseQuery = query(
             this.firebaseColRef,
-            where("uid", "==", user.uid),
+            where(
+              "chatroomCode",
+              "==",
+              this.props.params.chatroomCode
+                ? this.props.params.chatroomCode
+                : "public"
+            ),
             orderBy("serverReceivedAt", "desc")
           );
-          // Subscribe a snapshot to the collection
+          // // Subscribe a snapshot to the collection
           this.unsubscribeSnapshots = onSnapshot(
             this.firebaseQuery,
             this.onCollectionUpdate
@@ -125,9 +164,9 @@ class ChatGadget extends Component {
         }
       }
     );
-  }
+  };
 
-  checkNetConnection() {
+  checkNetConnection = () => {
     NetInfo.fetch().then((connection) => {
       if (connection.isConnected) {
         this.setState(
@@ -151,9 +190,9 @@ class ChatGadget extends Component {
         );
       }
     });
-  }
+  };
 
-  handleUpdateChatStyles() {
+  updateChatStylesHandler = () => {
     const { params } = this.props;
 
     if (params?.chatBgColor) {
@@ -162,7 +201,7 @@ class ChatGadget extends Component {
         ...styles.giftedChatContainer,
         backgroundColor: `${params.chatBgColor.code}30`,
         borderWidth: 1,
-        borderRadius: 5,
+        borderRadius: 8,
         borderColor:
           params.chatBgColor.name === "White"
             ? "#00000050"
@@ -173,15 +212,12 @@ class ChatGadget extends Component {
         backgroundColor: `${params.chatBgColor.code}90`,
       };
     }
-  }
+  };
 
-  handleSignIn(user) {
-    console.log("handleSignIn", user);
-
+  signInHandle = (user) => {
     if (!user) {
       signInAnonymously(this.firebaseAuth)
         .then((cred) => {
-          console.log("signInAnonymously", cred);
           this.setState({
             uid: cred.data().uid,
             messages: [],
@@ -191,73 +227,61 @@ class ChatGadget extends Component {
           console.error(err.message);
         });
     }
-  }
+  };
 
-  handleSendMessage(messages = []) {
+  sendMessageHandler = (messages = []) => {
     this.setState(
       (previousState) => ({
         messages: GiftedChat.append(previousState.messages, messages),
       }),
       () => {
-        this.saveMessagesLocally();
+        this.addMessageToFirebase();
+        // this.saveMessagesLocally();
       }
     );
-  }
+  };
 
-  onMessageSend(messages = []) {
-    const { uid } = this.state;
+  addMessageToFirebase = () => {
+    const { uid, messages } = this.state;
+    const { params } = this.props;
 
     addDoc(this.firebaseColRef, {
       _id: messages[0]._id,
       user: messages[0].user,
-      text: messages[0].text,
+      text: messages[0].text || "",
       createdAt: messages[0].createdAt,
       serverReceivedAt: serverTimestamp(),
+      image: messages[0].image || null,
+      location: messages[0].location || null,
       uid: uid,
+      chatroomCode: params.chatroomCode || "public",
     })
-      .then(async () => {
+      .then(() => {
         console.log("Message sent successfully");
-        
-        // Just for Demo Purposes //////////////////////////////////////
-        await addDoc(this.firebaseColRef, {
-          _id: Math.floor(Math.random() * 1000),
-          user: {
-            _id: 2,
-            name: "Robot",
-            avatar: "https://picsum.photos/id/30/140/140",
-          },
-          text: await this.robot(),
-          createdAt: new Date(),
-          serverReceivedAt: serverTimestamp(),
-          uid: uid,
-        })
-          .then(() => {
-            console.log("Automatic reply sent successfully");
-          })
-          .catch((err) => {
-            console.error(err.message);
-          });
-        ////////////////////////////////////////////////////////////////
       })
       .catch((err) => {
         console.error(err.message);
       });
-  }
+  };
 
   onCollectionUpdate = (snapshot) => {
     const messages = [];
 
     snapshot.docs.forEach((doc) => {
       const { uid } = this.state;
+      const { params } = this.props;
       const data = doc.data();
 
       messages.push({
         _id: data._id,
         user: data.user,
-        text: data.text,
+        text: data.text || "",
         createdAt: data.createdAt.toDate(),
         serverReceivedAt: serverTimestamp(),
+        image: data.image || null,
+        location: data.location || null,
         uid: uid,
+        chatroomCode: params.chatroomCode || "public",
       });
     });
 
@@ -266,62 +290,215 @@ class ChatGadget extends Component {
         messages,
       },
       () => {
-        console.log(`onCollectionUpdate, length: ${messages.length}`);
         this.saveMessagesLocally();
       }
     );
   };
 
-  async getMessagesLocally() {
-    let messages = "";
+  getMessagesLocally = async () => {
     try {
-      messages = (await AsyncStorage.getItem("messages")) || [];
-      this.setState({
-        messages: JSON.parse(messages),
-      });
-      console.log(
-        `Messages retrieved from AsyncStorage. length: ${messages.length}`
+      const uid = await AsyncStorage.getItem(LOCAL_STORAGE_UID_ITEM_NAME);
+      this.setState(
+        {
+          uid: uid || "",
+        },
+        async () => {
+          try {
+            let data = await AsyncStorage.getItem(LOCAL_STORAGE_DATA_ITEM_NAME);
+            if (data) {
+              data = JSON.parse(data);
+              if (Object.keys(data).length > 0) {
+                const chatroomCode = this.props.params.chatroomCode || "public";
+                this.setState(
+                  {
+                    messages: data[chatroomCode] || [],
+                  },
+                  () => {
+                    console.log("Messages state", this.state.messages);
+                  }
+                );
+              }
+            } else {
+              this.setState({
+                messages: [],
+              });
+            }
+          } catch (err) {
+            console.error(err.message);
+          }
+        }
       );
     } catch (err) {
-      console.log(err.message);
+      console.error(err.message);
     }
-  }
+  };
 
-  async saveMessagesLocally() {
+  saveMessagesLocally = async () => {
     try {
       const { messages } = this.state;
-      await AsyncStorage.setItem("messages", JSON.stringify(messages));
-      console.log(`Messages saved in AsyncStorage. length: ${messages.length}`);
-    } catch (err) {
-      console.log(err.message);
-    }
-  }
-
-  async deleteMessagesLocally() {
-    try {
-      await AsyncStorage.removeItem("messages");
-      this.setState({
-        messages: [],
-      });
+      const chatroomCode = this.props.params.chatroomCode || "public";
+      let curData = JSON.parse(
+        (await AsyncStorage.getItem(LOCAL_STORAGE_DATA_ITEM_NAME)) || "{}"
+      );
+      curData[chatroomCode] = messages;
+      await AsyncStorage.setItem(
+        LOCAL_STORAGE_DATA_ITEM_NAME,
+        JSON.stringify(curData)
+      );
       console.log(
-        `Messages deleted from AsyncStorage. length: ${messages.length}`
+        `Data saved in AsyncStorage @Chatroom: ${chatroomCode}, length: ${messages.length}`
       );
     } catch (err) {
-      console.log(err.message);
+      console.error(err.message);
     }
-  }
+  };
+
+  // Upload images to Firebase
+  uploadImageToFirebaseHandler = async (
+    uri,
+    directoryName = "",
+    sendHandler = null,
+    updateUserAvatar = false,
+    uid = null
+  ) => {
+    const blob = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      xhr.onload = () => {
+        resolve(xhr.response);
+      };
+      xhr.onerror = (err) => {
+        console.error("XHR error:", err.message);
+        reject(new TypeError("Network request failed"));
+      };
+      xhr.responseType = "blob";
+      xhr.open("GET", uri, true);
+      xhr.send(null);
+    });
+
+    const imageNameBefore = uri.split("/");
+    let imageName = imageNameBefore[imageNameBefore.length - 1];
+    if (updateUserAvatar) {
+      const filenameSplits = imageName.split(".");
+      if (filenameSplits.length > 1) {
+        imageName = `${uid}.${filenameSplits[filenameSplits.length - 1]}`;
+      } else {
+        imageName = `${uid}.imagefile`;
+      }
+    }
+    const storageRef = ref(
+      getStorage(this.firebaseApp, FIREBASE_CONFIGS.storageConfig.bucketURL),
+      `${directoryName}/${imageName}`
+    );
+    const uploadTask = uploadBytesResumable(storageRef, blob);
+
+    // Register three observers:
+    // 1. 'state_changed' observer, called any time the state changes
+    // 2. Error observer, called on failure
+    // 3. Completion observer, called on successful completion
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log("Upload is " + progress + "% done");
+        switch (snapshot.state) {
+          case "paused":
+            console.log("Upload is paused");
+            break;
+          case "running":
+            console.log("Upload is running");
+            break;
+        }
+      },
+      (err) => {
+        console.error("uploadTask error:", err.message);
+        blob.close();
+      },
+      () => {
+        // Handle successful uploads on complete
+        getDownloadURL(uploadTask.snapshot.ref)
+          .then((downloadURL) => {
+            console.log("File available at", downloadURL);
+            if (sendHandler) {
+              sendHandler([{ _id: 1, image: `${downloadURL}` }]);
+            }
+            if (updateUserAvatar) {
+              this.setState({
+                userAvatar: downloadURL,
+              });
+            }
+          })
+          .catch((err) => {
+            console.error("getDownloadURL failed:", err.message);
+          })
+          .finally(() => {
+            blob.close();
+          });
+      }
+    );
+  };
+
+  // Change colors based on the user's selected theme color
+  renderCustomActionsHandler = (props) => {
+    const { params } = this.props;
+    let wrapperStyle;
+    let iconTextStyle;
+
+    if (params?.chatBgColor) {
+      if (params.chatBgColor.name === "White") {
+        wrapperStyle = {
+          borderColor: "black",
+        };
+        iconTextStyle = { color: "black" };
+      } else {
+        wrapperStyle = {
+          borderColor: params.chatBgColor.code,
+        };
+        iconTextStyle = { color: params.chatBgColor.code };
+      }
+    }
+
+    return (
+      <GiftedChatCustomActions
+        {...props}
+        wrapperStyle={wrapperStyle}
+        iconTextStyle={iconTextStyle}
+      />
+    );
+  };
+
+  // Customize the View for sending GeoLocation
+  renderCustomView = (props) => {
+    const { currentMessage } = props;
+
+    if (currentMessage.location) {
+      return (
+        <MapView
+          style={styles.mapView}
+          region={{
+            latitude: currentMessage.location.latitude,
+            longitude: currentMessage.location.longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+        />
+      );
+    }
+    return null;
+  };
 
   // Update the InputToolbar
-  renderInputToolbar(props) {
+  renderInputToolbarHandler = (props) => {
     const { isConnected } = this.state;
 
     if (isConnected === true) {
       return <InputToolbar {...props} />;
     }
-  }
+  };
 
   // Add custom styles to messages via Bubble
-  renderBubble(props) {
+  renderBubbleHandler = (props) => {
     const { params } = this.props;
 
     let customColorBG = "#000000";
@@ -346,11 +523,11 @@ class ChatGadget extends Component {
         wrapperStyle={{
           left: {
             ...styleWrappers,
-            backgroundColor: `${customColorBG}25`,
+            backgroundColor: `${customColorBG}55`,
           },
           right: {
             ...styleWrappers,
-            backgroundColor: `${customColorBG}50`,
+            backgroundColor: `${customColorBG}75`,
           },
         }}
         textProps={{
@@ -367,11 +544,14 @@ class ChatGadget extends Component {
             color: customColorInner,
           },
         }}
+        usernameStyle={{
+          color: customColorInner,
+        }}
       />
     );
-  }
+  };
 
-  handleReset() {
+  handleReset = () => {
     const { uid } = this.state;
     const { currentUser } = this.firebaseAuth;
 
@@ -387,26 +567,35 @@ class ChatGadget extends Component {
         });
       });
     }
-  }
+  };
 
-  render() {
-    const { messages } = this.state;
+  render = () => {
+    const { messages, uid, userAvatar, username } = this.state;
     const { params } = this.props;
 
     return (
       <View style={styles.subContainer}>
+        <ChatroomName
+          chatroomName={params.chatroomCode || "public"}
+          chatBgColor={
+            params.chatBgColor || { name: "White", code: colors.white }
+          }
+        />
         <View style={styles.giftedChatContainer}>
           <GiftedChat
-            renderInputToolbar={this.renderInputToolbar}
-            renderBubble={this.renderBubble}
             messages={messages}
-            // onSend={(messages) => this.handleSendMessage(messages)}
-            onSend={(messages) => this.onMessageSend(messages)}
+            renderInputToolbar={this.renderInputToolbarHandler}
+            renderActions={this.renderCustomActionsHandler}
+            renderCustomView={this.renderCustomView}
+            renderBubble={this.renderBubbleHandler}
+            renderUsernameOnMessage={true}
+            onSend={(messages) => this.sendMessageHandler(messages)}
             user={{
-              _id: 1,
-              name: params.username && params.username,
-              avatar: "https://picsum.photos/id/1/140/140",
+              _id: uid,
+              name: username || "anonymous",
+              avatar: userAvatar,
             }}
+            onUploadImageToFirebase={this.uploadImageToFirebaseHandler}
           />
           {Platform.OS === "android" ? (
             <KeyboardAvoidingView behavior="height" />
@@ -414,7 +603,7 @@ class ChatGadget extends Component {
         </View>
       </View>
     );
-  }
+  };
 }
 
 export default ChatGadget;

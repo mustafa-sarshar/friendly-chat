@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { colors } from "../../assets/css";
+
 import GLOBAL_STYLES from "../../assets/css";
 
 const styles = StyleSheet.create({
@@ -7,29 +7,21 @@ const styles = StyleSheet.create({
   subContainer: {
     flex: 1,
     width: "100%",
-    height: "100%",
-    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  giftedChatContainer: {
+  imageContainer: {
     flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "center",
+  },
+
+  actionsWrapper: {
     width: "100%",
-    height: "100%",
-  },
-
-  chatArea: {
-    flex: 1,
     alignItems: "center",
     justifyContent: "flex-end",
-    width: "100%",
-    height: "100%",
-  },
-
-  mapView: {
-    width: 150,
-    height: 100,
-    borderRadius: 13,
-    margin: 3,
+    backgroundColor: "#FFFFFF70",
   },
 });
 
