@@ -24,7 +24,11 @@ class App extends Component {
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Start">
           <Stack.Screen name="Start" component={Start} />
-          <Stack.Screen name="User" component={User} />
+          <Stack.Screen
+            name="User"
+            component={User}
+            options={{ title: "User Profile" }}
+          />
           <Stack.Screen name="Chat" component={Chat} />
         </Stack.Navigator>
         <StatusBar style="auto" />
