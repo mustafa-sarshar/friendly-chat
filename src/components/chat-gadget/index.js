@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { View, KeyboardAvoidingView, Platform, Text } from "react-native";
+import { View, KeyboardAvoidingView, Platform } from "react-native";
 import { GiftedChat, Bubble, InputToolbar } from "react-native-gifted-chat";
 import MapView from "react-native-maps";
 import NetInfo from "@react-native-community/netinfo";
