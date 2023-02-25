@@ -43,6 +43,12 @@ LogBox.ignoreLogs([
   `Key "cancelled" in the image picker result is deprecated and will be removed in SDK 48, use "canceled" instead`,
 ]);
 
+/**
+  * Component for monitoring and performing all Chat related functions.
+  * 
+  * @component
+  * @return {---} The ChatGadget interface
+  */
 class ChatGadget extends Component {
   constructor(props) {
     super(props);

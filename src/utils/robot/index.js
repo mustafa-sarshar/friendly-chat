@@ -1,4 +1,7 @@
-// Simulate a Robot
+/**
+ * Simulates a ChatBot and returns the next available message.
+ * @return {message:string} a message.
+ */
 const Robot = () => {
   const autoMessages = [
     "Hi, Mike, I'm Jessica 👱, What's Up?",
