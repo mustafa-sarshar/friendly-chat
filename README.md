@@ -1,12 +1,30 @@
-# (musto) friendly-chat
+# (Musto) Friendly Chat
 
-## WATCH THE DEMO
-
-[YouTube](https://youtu.be/vFDsjfluJ_c)
+- An implementation of React Native for developing simple Chat applications for mobile devices (iOS/Android)
 
 ## OBJECTIVES
 
-To build a chat app for mobile devices using React Native. The app will provide users with a chat interface and options to share images and their location.
+- To build a chat app for mobile devices using React Native.
+- The app will provide users with a chat interface and options to share images and their location.
+
+## WATCH THE DEMO ON YOUTUBE [📽️🔗](https://youtu.be/vFDsjfluJ_c)
+
+### SCREENSHOTS
+
+<table width="100%"  style="overflow:auto">
+  <tr>
+    <th width="25%" style="text-align:center;">Welcome Screen</th>
+    <th width="25%" style="text-align:center;">User Profile</th>
+    <th width="25%" style="text-align:center;">Chat Area</th>
+    <th width="25%" style="text-align:center;">Chat Options</th>
+  </tr>
+  <tr>
+    <td width="25%"><img src="https://github.com/mustafa-sarshar/friendly-chat/blob/main/docs/assets/img/musto-friendly-chat-1.png?raw=true"/></td>
+    <td width="25%"><img src="https://github.com/mustafa-sarshar/friendly-chat/blob/main/docs/assets/img/musto-friendly-chat-2.png?raw=true"/></td>
+    <td width="25%"><img src="https://github.com/mustafa-sarshar/friendly-chat/blob/main/docs/assets/img/musto-friendly-chat-3.png?raw=true"/></td>
+    <td width="25%"><img src="https://github.com/mustafa-sarshar/friendly-chat/blob/main/docs/assets/img/musto-friendly-chat-4.png?raw=true"/></td>
+  </tr>
+</table>
 
 ## THE 5 Ws
 
