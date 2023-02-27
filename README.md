@@ -1,6 +1,6 @@
 # (Musto) Friendly Chat
 
-- An implementation of React Native for developing simple Chat applications for mobile devices (iOS/Android)
+- An implementation of React Native for developing a simple Chat application for mobile devices (iOS/Android)
 
 ## OBJECTIVES
 
